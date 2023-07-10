@@ -1,21 +1,22 @@
 package com.example.Api_version.entities;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.Collection;
 
 @Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Contrat {
+public class Profil {
     @Id
-    private String codeContrat;
-    private String libelleContrat;
-
-
+    private String codeProfil;
+    private String libelle;
+    @ManyToMany
+    private Collection<Habilitation> habilitations;
 }

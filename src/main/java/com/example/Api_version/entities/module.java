@@ -16,8 +16,6 @@ import lombok.NoArgsConstructor;
 @Entity
 public class module {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
     private String codeModule;
     private String libelleModule;
     private String description;

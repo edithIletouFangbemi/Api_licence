@@ -2,7 +2,6 @@ package com.example.Api_version.entities;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,14 +14,15 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Licence {
+public class Contrat_Institution {
     @Id
-    private String codeLicence;
-    private String libelle;
-    private LocalDateTime date_création;
-    private LocalDateTime date_expiration;
-    private TypeLicence typeLicence;
+    private String codeContrat;
+    private String libelleContrat;
+    private LocalDateTime date_debut;
+    private  LocalDateTime date_fin;
+    private int nbrPosteTotal;
+    private int nbrAgence;
+
     private int statut;
-    @ManyToOne
-    private Parametre parametre;
+
 }

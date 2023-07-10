@@ -1,22 +1,24 @@
 package com.example.Api_version.entities;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Data
+import java.time.LocalDateTime;
+
 @Builder
+@Entity
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
-public class Institution {
+public class DetailContrat {
     @Id
-    private String codeInst;
-    private String nomInst;
-    private String adresseInst;
+    private String codeDetailContrat;
+    private String libelle;
+    private LocalDateTime date_debut;
+    private LocalDateTime date_fin;
+    private int nbPoste;
 }

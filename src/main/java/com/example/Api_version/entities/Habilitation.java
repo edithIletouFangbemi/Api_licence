@@ -9,14 +9,17 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
+import java.time.LocalDateTime;
 @Entity
-public class Institution {
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+@Data
+public class Habilitation {
     @Id
-    private String codeInst;
-    private String nomInst;
-    private String adresseInst;
+    private String codeHabilitation;
+    private String libelle;
+    private int statut;
+    private LocalDateTime dateCreation;
+    private LocalDateTime dateSuppression;
 }

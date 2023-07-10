@@ -15,11 +15,11 @@ import java.util.Collection;
 @Entity
 public class Produit {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
     private String codeProduit;
     private String nom;
     private String description;
+    @OneToMany
+    private Collection<Module> modules;
 
 
 }
