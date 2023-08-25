@@ -17,6 +17,8 @@ public class Profil {
     @Id
     private String codeProfil;
     private String libelle;
+
+    private int statut;
     @ManyToMany
     private Collection<Habilitation> habilitations;
 }

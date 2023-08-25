@@ -7,10 +7,11 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 @Entity
-@Builder
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -20,8 +21,7 @@ public class Parametre {
     private String libelle;
     private String description;
     private int statut;
-    private LocalDateTime date_debut;
-    private LocalDateTime date_fin;
-
+    private Date dateDebut;
+    private LocalDateTime dateFin;
 
 }

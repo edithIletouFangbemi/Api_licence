@@ -6,13 +6,10 @@ spring:
     version: 0.1.0
   server:
     port: 8080
-      #springdoc:
-    #swagger-ui:
-    #path: /swagger-ui.html
 
   #Database configuration
   datasource:
-    database: myApp #Nom de la base de donn?es
+    database: licenceDatabase #Nom de la base de donn?es
     hostname: localhost #Base de donn?es local
     port: 5432 #Port pour le serveur de base de donn?es
     username: postgres #nom de l'utilisateur d?finit pour la base de donn?es
@@ -34,5 +31,33 @@ spring:
     properties:
       hibernate:
         enable_lazy_load_no_trans: true
+
+
+  main:
+    allow-circular-references=true:
+
+ # mail:
+  # host: smtp.gmail.com
+  # port: 587
+  # username: melefangbemi@gmail.com
+  # password: dlwmcvsronvyxvwj
+  # properties:
+    # mail:
+      #smtp:
+        #auth: true
+        #starttls:
+           # enable = true
+
+  mail:
+    host : smtp.gmail.com
+    port : 587
+    username : LicenceProCagecfi23@gmail.com
+    password : vyfdfcjllntxumyz
+    properties:
+      mail:
+        smtp:
+          auth : true
+          starttls :
+            enable: true
 
 

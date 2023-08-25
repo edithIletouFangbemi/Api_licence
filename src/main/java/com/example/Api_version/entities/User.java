@@ -1,10 +1,12 @@
 package com.example.Api_version.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.NaturalId;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -20,18 +22,22 @@ import java.util.List;
 @Table(name = "_users")
 public class User implements UserDetails {
     @Id
-    @GeneratedValue
-    private Integer id;
+    private String codeUser;
     private String firstname;
     private String lastname;
+    @NaturalId(mutable = true)
     private String email;
     private String password;
-    @Enumerated(EnumType.STRING)
-    private Role role;
+    @Column(name = "enabled")
+    private boolean enabled;
+    @ManyToOne
+    private Profil profil;
+    @JsonIgnoreProperties
+    private int statut;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority(role.name()));
+        return List.of(new SimpleGrantedAuthority(profil.getLibelle()));
     }
 
     @Override
@@ -61,6 +67,6 @@ public class User implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
+        return enabled;
     }
 }

@@ -1,9 +1,10 @@
 package com.example.Api_version.entities;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -11,11 +12,10 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class Contrat {
+public class LicenceModule {
     @Id
-    private String codeContrat;
-    private String libelleContrat;
-
-
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
+    private String codeLicence;
+    private String codeModule;
 }

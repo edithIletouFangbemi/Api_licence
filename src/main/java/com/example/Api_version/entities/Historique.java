@@ -5,19 +5,21 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Data
-@Builder
+import java.time.LocalDateTime;
+
+@Entity
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
-public class module {
+@Data
+public class Historique {
     @Id
-    private String codeModule;
-    private String libelleModule;
-    private String description;
-    private TypeModule type_module;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
+    private LocalDateTime dateCreation;
+    private String auteur;
+    private String action;
+    private int statut;
 }
