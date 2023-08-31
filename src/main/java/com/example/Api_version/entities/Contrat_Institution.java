@@ -21,8 +21,8 @@ public class Contrat_Institution {
     @Id
     private String codeContrat;
     private String libelleContrat;
-    private LocalDateTime dateDebut;
-    private LocalDateTime dateFin;
+    private Date dateDebut;
+    private Date dateFin;
     private int nbrPosteTotal;
     private int nbrAgence;
     private int statut;

@@ -33,7 +33,7 @@ public class LicenceService {
     private final ParametreDeVieRepository parametreDeVieRepository;
     private Poste postenew;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
-    String returnKey = "#@£%&é'(-è_çà)='?./§!:;,<*µ¤+=}^9";
+    private String returnKey = "#@£%&é'(-è_çà)df";
     private final ProduitRepository produitRepository;
     private final DetailContratRepository detailContratRepository;
     private final ContratRepository contratRepository;
@@ -210,7 +210,7 @@ public class LicenceService {
 
                     if(licenceOptional.isPresent()) {
 
-                        throw new ProduitException("Un poste a deja ces informations veuillez changer de poste pour le module !!" + mod.getLibelleModule());
+                        throw new ProduitException("Un poste a deja ces informations veuillez changer de poste pour le module" + mod.getLibelleModule());
                     }
 
                     postenew = posteOptional.get();
@@ -299,9 +299,9 @@ public class LicenceService {
         List<LicenceReturnRequest> resultats = new ArrayList<>();
 
         Poste[] finalPoste = poste;
+        Poste[] finalPoste1 = poste;
         moduleList.forEach(mod->{
             String licence = "";
-
             try {
                 licence = AESCryptor.encryptLicence(value.toString(), CodeGenerator.generateKey(key.toString(), mod.getLibelleModule()));
             } catch (Exception e) {
@@ -326,12 +326,12 @@ public class LicenceService {
             try {
 
                 var reponse = LicenceReturnRequest.builder()
-                        .codeLicence(AESCryptor.encrypt(licence,returnKey))
-                        .module(AESCryptor.encrypt(mod.getCodeModule(),returnKey))
-                        .institution(AESCryptor.encrypt(institution.getCodeInst(),returnKey))
-                        .agence(AESCryptor.encrypt(agence.getCodeAgence(),returnKey))
-                        .key(AESCryptor.encrypt(keyReturn.toString(),returnKey))
-                        .codePoste(AESCryptor.encrypt(postenew.getCodePoste(),returnKey))
+                        .codeLicence(licence)
+                        .module(mod.getCodeModule())
+                       .institution(institution.getCodeInst())
+                        .agence(agence.getCodeAgence())
+                        .key(keyReturn.toString())
+                        .codePoste(finalPoste1[0].getCodePoste())
                         .build();
 
                 resultats.add(reponse);
@@ -345,6 +345,27 @@ public class LicenceService {
         });
 
     return resultats;
+    }
+
+    public LicenceReturnRequest getLicence(String codelicence) throws Exception {
+        List<Object[]> results = licenceRepository.getLicence(codelicence);
+        var retour = new LicenceReturnRequest();
+        for(Object[] result: results){
+            String libelleLicence = (String)result[0];
+            String codemodule = (String)result[1];
+            String codeposte = (String)result[2];
+            String key = (String)result[3];
+            retour = LicenceReturnRequest.builder()
+                    .codeLicence(AESCryptor.encrypt(libelleLicence,returnKey))
+                    .module(AESCryptor.encrypt(codemodule,returnKey))
+                    .key(AESCryptor.encrypt(key,returnKey))
+                    .codePoste(AESCryptor.encrypt(codeposte,returnKey))
+                    .build();
+
+
+        }
+
+        return retour;
     }
 
     public List<LicenceRecapRequest> recapLicence(){

@@ -45,13 +45,12 @@ public class InstitutionController {
     public ResponseEntity<List<Statistique>> countAgence(){
         return ResponseEntity.ok(institutionService.listeCountAgence());
     }
-/*
-    @GetMapping("listeSupprime")
-    public ResponseEntity<List<InstitutionReturnRequest>> listeDeleted(){
-        return new ResponseEntity<List<InstitutionReturnRequest>>(institutionService.listeDeleted(),HttpStatus.ACCEPTED);
+
+    @GetMapping("countWithProduit")
+    public ResponseEntity<List<Statistique>> listeDeleted(){
+        return ResponseEntity.ok(institutionService.countWithProduit());
     }
 
- */
     @DeleteMapping("supprime/{code}")
     public ResponseEntity<String> delete(@PathVariable("code") String code){
         return new ResponseEntity<String>(institutionService.supprimer(code), HttpStatus.OK);

@@ -54,6 +54,10 @@ public class LicenceController {
     public ResponseEntity<List<LicenceRecapRequest>> lister(){
         return ResponseEntity.ok(licenceService.recapLicence());
     }
+    @GetMapping("unelicence/codeLicence")
+    public ResponseEntity<LicenceReturnRequest> getLicence(@PathVariable("codeLicence") String codeLicence) throws Exception {
+        return ResponseEntity.ok(licenceService.getLicence(codeLicence));
+    }
 
     @GetMapping("telecharger/{codeLicence}")
     public void download(@PathVariable("codeLicence") String codeLicence){

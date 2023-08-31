@@ -11,13 +11,10 @@ import java.util.List;
 
 @Data
 public class ContratUnit implements Serializable {
-    private String produit;
+    private String type;
     private int nbrPoste;
-    private int nbrAgence;
-    private List<String> modules = new LinkedList<>();
-    private List<String> agences = new LinkedList<>();
-    private String typeContrat;
+    private String module ;
+    private String agence;
     private Date dateDebut;
     private Date dateFin;
-    private String codeContrat;
 }

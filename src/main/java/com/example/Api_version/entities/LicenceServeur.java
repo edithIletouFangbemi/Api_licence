@@ -2,6 +2,7 @@ package com.example.Api_version.entities;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -24,4 +25,6 @@ public class LicenceServeur {
     private Agence agence;
     private LocalDateTime dateCreation;
     private LocalDateTime dateDesactivation;
+    @OneToOne
+    private Module module;
 }

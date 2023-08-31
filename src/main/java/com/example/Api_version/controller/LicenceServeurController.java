@@ -3,10 +3,9 @@ package com.example.Api_version.controller;
 import com.example.Api_version.Services.LicenceServeurService;
 import com.example.Api_version.entities.Agence;
 import com.example.Api_version.entities.Institution;
-import com.example.Api_version.request.LicenceReturnRequest;
-import com.example.Api_version.request.LicenceReturnRequest2;
-import com.example.Api_version.request.LicenceServeurRequest;
-import com.example.Api_version.request.TestRequest;
+import com.example.Api_version.entities.Module;
+import com.example.Api_version.entities.Produit;
+import com.example.Api_version.request.*;
 import com.example.Api_version.utils.Jasperprint;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -27,11 +26,11 @@ public class LicenceServeurController {
 
     private final LicenceServeurService licenceServeurService;
     Jasperprint jasperprint = new Jasperprint();
-/*
+
     @PostMapping("creer")
-    public ResponseEntity< LicenceReturnRequest2> creer(@RequestBody LicenceServeurRequest request) throws Exception {
-        return new ResponseEntity<LicenceReturnRequest>((MultiValueMap<String, String>) licenceServeurService.creer(request),HttpStatus.CREATED);
-    }*/
+    public ResponseEntity<List<LicenceReturnRequest2>> creer(@RequestBody LicenceServeurRequest request) throws Exception {
+        return new ResponseEntity<List<LicenceReturnRequest2>>(licenceServeurService.creer(request),HttpStatus.CREATED);
+    }
     @GetMapping("liste")
     public ResponseEntity<List<LicenceReturnRequest2 >> lister(){
         return ResponseEntity.ok(licenceServeurService.listeReturn());
@@ -54,14 +53,26 @@ public class LicenceServeurController {
         return ResponseEntity.ok(licenceServeurService.activate(code));
     }
 
-    @GetMapping("liste-agence/{code}")
-    public ResponseEntity<List<Agence>> listeAgence(@PathVariable("code") String code){
-        return ResponseEntity.ok(licenceServeurService.listeAgence(code));
+    @GetMapping("liste-agence/{codeinst}/{codeproduit}")
+    public ResponseEntity<List<Agence>> listeAgence(@PathVariable("codeinst") String codeinst, @PathVariable("codeproduit") String codeproduit){
+        return ResponseEntity.ok(licenceServeurService.listeAgenceServeur(codeinst, codeproduit));
     }
     @PostMapping("telecharger")
     public void downloadFiche(@RequestBody TestRequest request, HttpServletResponse response){
         jasperprint.print(licenceServeurService.doJasper(request), response);
 
+    }
+    @GetMapping("produits/{codeinst}")
+    public ResponseEntity<List<Produit>> listeproduit(@PathVariable("codeinst") String codeinst){
+        return ResponseEntity.ok(licenceServeurService.listeProduit(codeinst));
+    }
+    @GetMapping("modules/{codeproduit}/{codeagence}")
+    public ResponseEntity<List<Module>> listeModule(@PathVariable("codeproduit") String codeproduit, @PathVariable("codeagence") String codeagence){
+        return ResponseEntity.ok(licenceServeurService.listeModule(codeproduit, codeagence));
+    }
+    @GetMapping("telecharger/{codelicence}")
+    public ResponseEntity<DownloadRequest> telecharger(@PathVariable("codelicence") String codelicence) throws Exception {
+        return ResponseEntity.ok(licenceServeurService.telecharger(codelicence));
     }
 
 }

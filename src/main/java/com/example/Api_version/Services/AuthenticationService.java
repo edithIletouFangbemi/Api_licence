@@ -81,8 +81,8 @@ public class AuthenticationService {
                 .lastname(request.getLastname())
                 .email(request.getEmail())
                 .statut(1)
-                .enabled(true)
-                .password(passwordEncoder.encode("4321"))
+                .enabled(false)
+                .password(CodeGenerator.passwordCode(request.getLastname(), request.getFirstname()))
                // .password(CodeGenerator.passwordCode(request.getLastname(), request.getFirstname()))
                 .profil(profil)
                 .build();
@@ -99,7 +99,7 @@ public class AuthenticationService {
 
          var user = repository.findByEmail(request.getEmail()).orElseThrow();
          if(user == null) throw new ProduitException("email introuvable!!");
-         if(user.isEnabled()== false) throw new ProduitException("Impossible de vous connecter veuillez votre compte est inactif consulter vos mails!! ");
+         if(user.isEnabled()== false) throw new ProduitException("Impossible de vous connecter veuillez verifier si votre compte est inactif consulter vos mails!! ");
          var jwtToken = jwtService.generateToken(user);
          var reponse = UserReturnRequest.builder(
                 ).codeUser(user.getCodeUser())
@@ -121,31 +121,29 @@ public class AuthenticationService {
 
     }
 
-    public String resetPassword(ResetPasswordRequest request){
+    public User resetPassword(ResetPasswordRequest request){
         Optional<User> userOptional = repository.findByEmail(request.getEmail());
         utilisateur = userOptional.get();
-        //if(userOptional.isEmpty() || utilisateur.getStatut() == 2) throw new ProduitException("aucun compte avec ces informations!");
-        Optional<VerificationToken> tokenOptional = verificationTokenRepository.findByUser(utilisateur);
+        if(userOptional.isEmpty() || utilisateur.getStatut() == 2) throw new ProduitException("aucun compte avec ces informations!");
+        //Optional<VerificationToken> tokenOptional = verificationTokenRepository.findByUser(utilisateur);
 
-        if(tokenOptional.isEmpty()) throw new ProduitException("aucun token ne correspond à cet utilisateur!!");
-        verificationToken = tokenOptional.get();
-        if(!request.getVerificationToken().equals(verificationToken.getToken())) throw new ProduitException("votre token n'est pas valide reverifiez!");
-        LocalDateTime expirationDateTime = verificationToken.getExpirationTime()
-                .toInstant()
-                .atZone(ZoneId.systemDefault())
-                .toLocalDateTime();
-        if(LocalDateTime.now().isAfter(expirationDateTime)) throw new ProduitException("votre token a expiré");
+        //if(tokenOptional.isEmpty()) throw new ProduitException("aucun token ne correspond à cet utilisateur!!");
+      //  verificationToken = tokenOptional.get();
+       // if(!request.getVerificationToken().equals(verificationToken.getToken())) throw new ProduitException("votre token n'est pas valide reverifiez!");
+      //  LocalDateTime expirationDateTime = verificationToken.getExpirationTime()
+              //  .toInstant()
+               // .atZone(ZoneId.systemDefault())
+               // .toLocalDateTime();
+       // if(LocalDateTime.now().isAfter(expirationDateTime)) throw new ProduitException("votre token a expiré");
         //comparer l'ancien mot de passe à ce qu'il ya dans la base
-        if(!passwordEncoder.matches(utilisateur.getPassword(), request.getOldPassword())) throw new ProduitException("l'ancien mot de passe fourni est incorrecte!!");
+        if(!utilisateur.getPassword().equals(request.getOldPassword())) throw new ProduitException("l'ancien mot de passe fourni est incorrecte!!");
         utilisateur.setPassword(passwordEncoder.encode(request.getNewPassword()));
         utilisateur.setEnabled(true);
         // changer isEnabled à true
 
         // enregistre le user dans la bd
 
-        repository.save(utilisateur);
-
-       return "Mot de passe modifié avec succès!!";
+       return repository.save(utilisateur);
 
     }
 
@@ -157,7 +155,7 @@ public class AuthenticationService {
         body = Body.builder()
                 .url("http://localhost:4200/resetPassword")
                 .build();
-        emailSenderService.sendEmail(utilisateur.getEmail(), "Changer votre mot de passe","cc");
+        emailSenderService.sendEmail(utilisateur.getEmail(), "cliquer pour Changer votre mot de passe","http://localhost:4200/resetPassword");
         return "un mail vous est envoyé allez verifier!";
     }
 

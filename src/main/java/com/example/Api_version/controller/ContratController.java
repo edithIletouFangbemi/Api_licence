@@ -74,10 +74,11 @@ public class ContratController {
     public ResponseEntity<AgenceDetail> detail(@PathVariable("codeinst") String codeinst, @PathVariable("codeagence") String codeagence){
         return ResponseEntity.ok(contratService.detailagence(codeinst, codeagence));
     }
+    /*
     @PostMapping("ajoutAvenant")
     public ResponseEntity<Contrat_Institution> ajouterAvenant(@RequestBody ContratUnit contratUnit){
         return new ResponseEntity<Contrat_Institution>(contratService.ajoutAvenant(contratUnit), HttpStatus.CREATED);
-    }
+    } */
     @GetMapping("produitPourContrat/{codeinst}")
     public ResponseEntity<List<Produit>> productsForNewContrat(@PathVariable("codeinst") String codeinst){
         return ResponseEntity.ok(contratService.productsByInst(codeinst));

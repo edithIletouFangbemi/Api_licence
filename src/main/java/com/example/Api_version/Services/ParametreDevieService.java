@@ -22,7 +22,7 @@ public class ParametreDevieService {
     public ParametreDeVieLicence creer(ParametreDeVieRequest request){
         Optional<ParametreDeVieLicence> parametreDeVieLicenceOptional = parametreDeVieRepository.findByStatutAndTypeLicence(1, request.getTypeLicence());
 
-        if(parametreDeVieLicenceOptional.isPresent()) throw new ProduitException("Un parametre est actif actuellement voulez vous le desactiver ?");
+        if(parametreDeVieLicenceOptional.isPresent()) throw new ProduitException("Un parametre est actif actuellement desactiver le d'abord !!");
 
         var parametre = new ParametreDeVieLicence();
 

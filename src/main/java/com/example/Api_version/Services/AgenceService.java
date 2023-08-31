@@ -333,8 +333,8 @@ public class AgenceService {
     }
 
     public Date getDatefin(Contrat_Institution contrat){
-        LocalDateTime dateDebut = contrat.getDateDebut(); // Remplacez avec votre date de début
-        LocalDateTime dateFin = contrat.getDateFin();   // Remplacez avec votre date de fin
+        LocalDateTime dateDebut = contrat.getDateDebut().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime(); // Remplacez avec votre date de début
+        LocalDateTime dateFin = contrat.getDateFin().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();   // Remplacez avec votre date de fin
 
         Duration duree = Duration.between(dateDebut, dateFin);
         long jours = duree.toDays();

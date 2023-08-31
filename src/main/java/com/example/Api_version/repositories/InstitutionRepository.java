@@ -31,4 +31,8 @@ public interface InstitutionRepository extends JpaRepository<Institution, String
          "where i.statut = 1 AND a.statut = 1\n" +
          "GROUP By i.codeinst;", nativeQuery = true)
  List<Object[]> countAgence();
+ @Query(value = "select DISTINCT i.nominst, COALESCE(COUNT(p.codeproduit), 0) from institution i JOIN contrat_institution c\n" +
+         "ON c.institution_codeinst = i.codeinst JOIN produit p ON c.produit_codeproduit = p.codeproduit\n" +
+         "group by  i.codeinst", nativeQuery = true)
+ List<Object[]> countWithProduit();
 }

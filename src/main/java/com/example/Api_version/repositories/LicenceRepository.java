@@ -14,7 +14,7 @@ import java.util.Optional;
 public interface LicenceRepository extends JpaRepository<Licence, String> {
     @Query(value = "select i.* from institution i JOIN agence a ON i.codeinst = a.institution_codeinst JOIN contrat_institution c On a.institution_codeinst = c.institution_codeinst\n" +
             "  WHERE i.statut = 1 AND a.statut = 1 AND c.statut = 1 AND  \n" +
-            " a.codeagence in (select agence_codeagence from licenceserveur where statut = 1)\n" +
+            " a.codeagence in (select DISTINCT agence_codeagence from detailcontrat where statut = 1)\n" +
             " GROUP BY i.codeinst\n" +
             " ;", nativeQuery = true)
     List<Object[]> listeInstitution();
@@ -24,9 +24,11 @@ public interface LicenceRepository extends JpaRepository<Licence, String> {
             " JOIN module m ON p.codeproduit = m.produit_codeproduit\n" +
             " JOIN detailcontrat d\n" +
             "                       ON m.codemodule = d.module_codemodule \n" +
-            "                         where a.statut = 1 AND i.statut = 1 AND c.statut = 1 AND  " +
+            "                         where a.statut = 1 AND i.statut = 1 AND c.statut = 1 AND" +
+
+            " d.typecontratmodule='limite' AND " +
             "                             p.codeproduit = :codeproduit AND i.codeinst = :codeinst AND a.codeagence in \n" +
-            "                         (select agence_codeagence from licenceserveur where statut = 1);", nativeQuery = true)
+            "                         (select DISTINCT agence_codeagence from detailcontrat where statut = 1);", nativeQuery = true)
     List<Object[]> listeAgence(@Param("codeinst") String codeinst, @Param("codeproduit") String codeproduit);
 
     @Query(value = " select DISTINCT p.* from institution i JOIN contrat_institution c ON i.codeinst = c.institution_codeinst\n" +
@@ -42,6 +44,7 @@ public interface LicenceRepository extends JpaRepository<Licence, String> {
             "            JOIN detailcontrat d ON a.codeagence = d.agence_codeagence\n" +
             "            where m.statut = 1 AND p.statut = 1   AND c.statut = 1 AND a.statut = 1 AND d.statut = 1\n" +
             "            AND m.codemodule = d.module_codemodule\n" +
+            " AND d.typecontratmodule = 'limite'" +
             "            AND a.codeagence = :codeagence AND p.codeproduit = :codeproduit\n" +
             "            GROUP BY c.codecontrat, m.codemodule"
             , nativeQuery = true)
@@ -81,12 +84,12 @@ public interface LicenceRepository extends JpaRepository<Licence, String> {
             "Group by pt.codeposte, i.codeinst, a.codeagence\n" +
             ";", nativeQuery = true)
     List<Object[]> ListeRecapLicence();
-    @Query(value="select i.codeinst, i.nominst,i.typearchitecture,COUNT(c.produit_codeproduit)\n" +
+    @Query(value="select DISTINCT i.codeinst, i.nominst,i.typearchitecture,COUNT(c.produit_codeproduit)\n" +
             "            from poste pt JOIN agence a ON pt.agence_codeagence = a.codeagence\n" +
             "            JOIN institution i ON a.institution_codeinst = i.codeinst JOIN contrat_institution c \n" +
             "            ON c.institution_codeinst = i.codeinst\n" +
             "            where i.statut = 1 AND a.statut = 1 AND  c.statut = 1 AND pt.statut = 1\n" +
-            "            Group by pt.codeposte, i.codeinst, a.codeagence", nativeQuery = true)
+            "            Group by pt.codeposte, i.codeinst", nativeQuery = true)
     List<Object[]> listeRecapitulatif();
 
     List<Licence> findAllByStatut(int statut);
@@ -108,6 +111,8 @@ public interface LicenceRepository extends JpaRepository<Licence, String> {
             "where m.statut = 1 AND p.statut = 1 AND a.codeagence = :codeagence", nativeQuery = true)
     List<Object[]> listeRecapPosteLicence(@Param("codeagence") String codeagence);
     List<Licence> findAllByPoste(Poste poste);
+    @Query(value="select l.libelle, l.module_codemodule, l.poste_codeposte, l.key from licence l where l.codelicence = :codelicence",nativeQuery = true)
+    List<Object[]> getLicence(@Param("codelicence") String codelicence);
 
 
 }

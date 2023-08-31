@@ -8,8 +8,11 @@ import java.util.Base64;
 public class AESCryptor {
     private static final String ALGORITHM = "AES";
     public static String encrypt(String data, String KEY) throws Exception {
+
         Key secretKey = new SecretKeySpec(KEY.getBytes(), ALGORITHM);
         Cipher cipher = Cipher.getInstance(ALGORITHM);
+
+
         cipher.init(Cipher.ENCRYPT_MODE, secretKey);
         byte[] encryptedBytes = cipher.doFinal(data.getBytes());
         return Base64.getEncoder().encodeToString(encryptedBytes);

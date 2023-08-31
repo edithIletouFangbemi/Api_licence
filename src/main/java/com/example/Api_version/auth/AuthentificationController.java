@@ -31,8 +31,8 @@ public class AuthentificationController {
         publisher.publishEvent(new RegistrationCompletePublisherEvent(response,applicationUrl(httpRequest)));
         return ResponseEntity.ok(response);
     }
-    @PostMapping("/reset")
-    public ResponseEntity<String> reset(@RequestBody ResetPasswordRequest request){
+    @PostMapping("/changer")
+    public ResponseEntity<User> reset(@RequestBody ResetPasswordRequest request){
         return ResponseEntity.ok(service.resetPassword(request));
     }
     @PostMapping("/forgot")

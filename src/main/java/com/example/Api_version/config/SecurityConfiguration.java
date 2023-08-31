@@ -33,7 +33,7 @@ public class SecurityConfiguration {
                         (request)
                                 -> {
                             try {
-                                request.requestMatchers("/utilisateur/authentication", "utilisateur/reset" , "utilisateur/forgot")
+                                request.requestMatchers("/utilisateur/authentication", "/utilisateur/changer" , "/utilisateur/forgot")
                                         .permitAll()
                                         .anyRequest()
                                         .authenticated()

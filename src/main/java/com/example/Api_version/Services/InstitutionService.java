@@ -169,4 +169,21 @@ public class InstitutionService {
         historyRepository.save(historique);
         return inst.getNomInst()+" a été supprimée avec succès!";
     }
+
+    public List<Statistique> countWithProduit(){
+        List<Object[]> results = institutionRepository.countWithProduit();
+        List<Statistique> listeRetour = new ArrayList<>();
+        for(Object[] result: results){
+            String institution = (String)result[0];
+            int nombre = ((Number)result[1]).intValue();
+
+            var stat = new Statistique();
+            stat.setLibelle(institution);
+            stat.setNombre(nombre);
+
+            listeRetour.add(stat);
+        }
+
+        return  listeRetour;
+    }
 }
