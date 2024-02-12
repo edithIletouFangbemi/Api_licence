@@ -14,6 +14,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
+/**
+ * Controlleur de Gestion des utilisateurs
+ */
 @RestController
 @RequestMapping("utilisateur")
 @RequiredArgsConstructor
@@ -23,6 +26,13 @@ public class AuthentificationController {
     private final AuthenticationService service;
     @Autowired
     private final ApplicationEventPublisher publisher;
+
+    /**
+     *
+     * @param request
+     * @param httpRequest
+     * @return envoie un mail à l'utilisateur pour que cet utilisateur puisse changer de mot de passe et se connecter
+     */
     @PostMapping("/register")
     public ResponseEntity<User> register(
             @RequestBody RegisterRequest request, final HttpServletRequest httpRequest
@@ -31,8 +41,8 @@ public class AuthentificationController {
         publisher.publishEvent(new RegistrationCompletePublisherEvent(response,applicationUrl(httpRequest)));
         return ResponseEntity.ok(response);
     }
-    @PostMapping("/reset")
-    public ResponseEntity<String> reset(@RequestBody ResetPasswordRequest request){
+    @PostMapping("/changer")
+    public ResponseEntity<User> reset(@RequestBody ResetPasswordRequest request){
         return ResponseEntity.ok(service.resetPassword(request));
     }
     @PostMapping("/forgot")

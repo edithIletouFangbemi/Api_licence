@@ -14,5 +14,6 @@ public class ParametreRequest {
     private List<String> parametres;
     @NotBlank(message = "Fournir la date de debut")
     private Date dateDebut;
+    private Date dateFin;
 
 }

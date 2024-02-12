@@ -6,6 +6,7 @@ import java.util.Date;
 
 @Data
 public class InstitutionReturnRequest {
+    private int id;
     private String codeInst;
     private String nomInst;
     private String adresseInst;

@@ -13,6 +13,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Controlleur de Gestion des Institutions
+ */
 @RestController
 @RequestMapping("institution/")
 @RequiredArgsConstructor
@@ -21,17 +24,29 @@ public class InstitutionController {
     private final InstitutionService institutionService;
     private final InstitutionRepository institutionRepository;
 
+    /**
+     * Créer une institution
+     * @param request
+     * @return l'institution créée
+     */
     @PostMapping("creer")
     public ResponseEntity<Institution> creer(@RequestBody InstitutionRequest request){
         return new ResponseEntity<Institution>(institutionService.creer(request), HttpStatus.CREATED);
     }
-    @PutMapping("update/{code}")
-    public ResponseEntity<Institution> update(@PathVariable("code") String code, @RequestBody InstitutionRequest institutionRequest){
-        return new ResponseEntity<Institution>( institutionService.update(code, institutionRequest), HttpStatus.OK);
+
+    /**
+     * Mettre à jour une institution
+     * @param id
+     * @param institutionRequest
+     * @return retourner l'institution mise à jour
+     */
+    @PutMapping("update/{id}")
+    public ResponseEntity<Institution> update(@PathVariable("id") int id, @RequestBody InstitutionRequest institutionRequest){
+        return new ResponseEntity<Institution>( institutionService.update(id, institutionRequest), HttpStatus.OK);
     }
-    @GetMapping("getOne/{code}")
-    public ResponseEntity<Institution> oneInstitution(@PathVariable("code") String code){
-        return new ResponseEntity<Institution>(institutionService.OneInstitution(code), HttpStatus.OK);
+    @GetMapping("getOne/{id}")
+    public ResponseEntity<Institution> oneInstitution(@PathVariable("id") int id){
+        return new ResponseEntity<Institution>(institutionService.OneInstitution(id), HttpStatus.OK);
     }
     @GetMapping
     public ResponseEntity<List<InstitutionReturnRequest>> liste(){
@@ -45,16 +60,15 @@ public class InstitutionController {
     public ResponseEntity<List<Statistique>> countAgence(){
         return ResponseEntity.ok(institutionService.listeCountAgence());
     }
-/*
-    @GetMapping("listeSupprime")
-    public ResponseEntity<List<InstitutionReturnRequest>> listeDeleted(){
-        return new ResponseEntity<List<InstitutionReturnRequest>>(institutionService.listeDeleted(),HttpStatus.ACCEPTED);
+
+    @GetMapping("countWithProduit")
+    public ResponseEntity<List<Statistique>> listeDeleted(){
+        return ResponseEntity.ok(institutionService.countWithProduit());
     }
 
- */
-    @DeleteMapping("supprime/{code}")
-    public ResponseEntity<String> delete(@PathVariable("code") String code){
-        return new ResponseEntity<String>(institutionService.supprimer(code), HttpStatus.OK);
+    @DeleteMapping("supprime/{id}")
+    public ResponseEntity<String> delete(@PathVariable("id") int id){
+        return new ResponseEntity<String>(institutionService.supprimer(id), HttpStatus.OK);
     }
 
 

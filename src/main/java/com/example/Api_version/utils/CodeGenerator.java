@@ -2,6 +2,9 @@ package com.example.Api_version.utils;
 import java.util.List;
 import java.util.Random;
 
+/**
+ * Classe de Génération de code simulé aux identifiants des objets en base de donnée
+ */
 public class CodeGenerator {
     private static final String ALPHABET = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
@@ -23,12 +26,19 @@ public class CodeGenerator {
 
    public static String passwordCode(String nom, String prenom){
        codeBuilder = new StringBuilder();
-       codeBuilder.append(nom.substring(0,2));
-       codeBuilder.append(prenom.substring(0,2));
-
-       codeBuilder = new StringBuilder(codeBuilder.substring(0, 4).toString());
        Random random = new Random();
-       for (int i = 0; i < 2; i++) {
+       var nomPrenoms = new StringBuilder();
+
+       nomPrenoms.append(nom.substring(nom.length() - 2));
+       nomPrenoms.append(prenom.substring(prenom.length() - 2));
+
+       for (int i = 0; i < 4; i++) {
+           int index = random.nextInt(ALPHABET.length());
+           codeBuilder.append(ALPHABET.charAt(index));
+       }
+       codeBuilder = codeBuilder.append(nomPrenoms.substring(0,4).toString());
+
+       for (int i = 0; i < 4; i++) {
            int index = random.nextInt(ALPHABET.length());
            codeBuilder.append(ALPHABET.charAt(index));
        }
@@ -38,12 +48,19 @@ public class CodeGenerator {
 
     public static String codeUser(String nom, String prenom){
         codeBuilder = new StringBuilder();
-        codeBuilder.append(nom.substring(0,2));
-        codeBuilder.append(prenom.substring(0,2));
-
-        codeBuilder = new StringBuilder(codeBuilder.substring(0, 3).toString());
-
         Random random = new Random();
+        var nomPrenoms = new StringBuilder();
+
+        nomPrenoms.append(nom.substring(nom.length() - 2));
+        nomPrenoms.append(prenom.substring(prenom.length() - 2));
+
+        for (int i = 0; i < 3; i++) {
+            int index = random.nextInt(ALPHABET.length());
+            codeBuilder.append(ALPHABET.charAt(index));
+        }
+
+        codeBuilder = codeBuilder.append(nomPrenoms.substring(0, 3).toString());
+
         for (int i = 0; i < 2; i++) {
             int index = random.nextInt(ALPHABET.length());
             codeBuilder.append(ALPHABET.charAt(index));

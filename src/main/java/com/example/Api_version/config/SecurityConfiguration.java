@@ -19,6 +19,9 @@ import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 import java.util.Arrays;
 import java.util.Collections;
 
+/**
+ * Gestion de la sécurité de l'application
+ */
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -33,7 +36,7 @@ public class SecurityConfiguration {
                         (request)
                                 -> {
                             try {
-                                request.requestMatchers("/utilisateur/authentication", "utilisateur/reset" , "utilisateur/forgot")
+                                request.requestMatchers("/utilisateur/authentication", "/utilisateur/changer" , "/utilisateur/forgot")
                                         .permitAll()
                                         .anyRequest()
                                         .authenticated()

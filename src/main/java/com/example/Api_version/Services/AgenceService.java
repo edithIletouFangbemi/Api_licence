@@ -11,7 +11,9 @@ import com.example.Api_version.request.ActiverRequest;
 import com.example.Api_version.request.AgenceRequest;
 import com.example.Api_version.utils.CodeGenerator;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 
 import java.time.LocalDateTime;
@@ -24,7 +26,9 @@ import java.time.Duration;
 
 import static java.time.LocalDateTime.now;
 
-
+/**
+ * service de gestion des agences
+ */
 @Service
 @RequiredArgsConstructor
 public class AgenceService {
@@ -35,6 +39,7 @@ public class AgenceService {
     private final DetailContratModuleRepository detailContratModuleRepository;
     private Institution institution;
     private Contrat_Institution contrat;
+    private AuthenticationService authenticationService;
     private List<Module> someModules;
     private Module module;
     private final ModuleService moduleService;
@@ -45,13 +50,20 @@ public class AgenceService {
     private Agence agence;
     private String caractere;
     private int nbrAgence;
+    private HistoryRepository historyRepository;
 
-    public Agence creer(String nom, String description, String adresse, String institutionCode){
-        Optional<Institution> inst = institutionRepository.findByCodeInstAndStatut(institutionCode,1);
+    /**
+     * Création d'une agence
+     * @param request
+     * @return
+     */
+    @Transactional
+    public Agence creer(AgenceRequest request){
+        Optional<Institution> inst = institutionRepository.findByCodeInstAndStatut(request.getInstitutionCode(),1);
 
         institution = inst.get();
 
-        if(inst.isEmpty()) throw  new InstitutionException("aucune institution avec le code "+ institutionCode);
+        if(inst.isEmpty()) throw  new InstitutionException("aucune institution avec le code "+ request.getInstitutionCode(), HttpStatus.NOT_FOUND);
 /*
        Optional<Contrat_Institution> contratInstitutionOptional = contratRepository.findByInstitutionAndStatut(institution,1);
         if(contratInstitutionOptional.isPresent()){
@@ -67,19 +79,19 @@ public class AgenceService {
 
         }*/
 
-        Optional<Agence> agenceOptional = agenceRepository.findByNomAndInstitution(nom
+        Optional<Agence> agenceOptional = agenceRepository.findByNomAndInstitution(request.getNom()
                 , institution);
 
         if(agenceOptional.isPresent()) throw new AgenceException("Une agence de l'institution "
                 + institution.getNomInst()
-                +" existe deja avec le nom " + nom);
+                +" existe deja avec le nom " + request.getNom());
 
         Agence newAgence = new Agence();
 
-        newAgence.setNom(nom);
-        newAgence.setCodeAgence(CodeGenerator.generateCode(nom,inst.get().getNomInst()));
-        newAgence.setAdresse(adresse);
-        newAgence.setDescription(description);
+        newAgence.setNom(request.getNom());
+        newAgence.setCodeAgence(request.getCodeAgence());
+        newAgence.setAdresse(request.getAdresse());
+        newAgence.setDescription(request.getDescription());
         newAgence.setInstitution(institution);
         newAgence.setStatut(1);
         newAgence.setDateCreation(LocalDateTime.now());
@@ -111,7 +123,15 @@ public class AgenceService {
             });
         } */
 
+        var historique = new Historique();
+        historique.setAction("Création de l'agence "+newAgence.getNom()+" de l'institution "+institution.getNomInst());
+        historique.setStatut(1);
+        historique.setDateCreation(LocalDateTime.now());
+        historique.setAuteur(authenticationService.getCurrentUsername().getName());
+
+        historyRepository.save(historique);
         return newAgence;
+
     }
 
     public Agence update(String code, AgenceRequest request){
@@ -333,8 +353,8 @@ public class AgenceService {
     }
 
     public Date getDatefin(Contrat_Institution contrat){
-        LocalDateTime dateDebut = contrat.getDateDebut(); // Remplacez avec votre date de début
-        LocalDateTime dateFin = contrat.getDateFin();   // Remplacez avec votre date de fin
+        LocalDateTime dateDebut = contrat.getDateDebut().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime(); // Remplacez avec votre date de début
+        LocalDateTime dateFin = contrat.getDateFin().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();   // Remplacez avec votre date de fin
 
         Duration duree = Duration.between(dateDebut, dateFin);
         long jours = duree.toDays();

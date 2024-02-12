@@ -18,7 +18,10 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
+import java.security.Principal;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
@@ -56,24 +59,30 @@ public class AuthenticationService {
         this.tokenRepository = tokenRepository;
     }
 
+    /**
+     * création d'un utilisateur et envoie de mail
+     * @param request
+     * @return l'utilisateur créé
+     */
     public User register(RegisterRequest request) {
         Optional<User> userOptionalbyLastname = repository.findByLastnameAndFirstnameAndEmail(request.getLastname(),
                 request.getFirstname(),request.getEmail());
-        Optional<User>  userOptionalByEmail = repository.findByEmail(request.getEmail());
+
+        Optional<User> userOptionalByEmail = repository.findByEmailIgnoreCase(request.getEmail());
 
         if(userOptionalbyLastname.isPresent()){
             var user2 = userOptionalbyLastname.get();
-            if(user2.getStatut() == 1) throw new UserException("Un utilisateur existe deja avec ces informations!! ", HttpStatus.BAD_REQUEST);
+            if(user2.getStatut() == 1) throw new UserException("Un utilisateur existe deja avec ces informations!! ", HttpStatus.CONFLICT);
             else{
                 user2.setStatut(1);
                 repository.save(user2);
             }
         }
-        if(userOptionalByEmail.isPresent() && userOptionalByEmail.get().getStatut() == 1 ) throw new UserException("cet adresse email est deja utilisé donc changez", HttpStatus.BAD_REQUEST);
+        if(userOptionalByEmail.isPresent() && userOptionalByEmail.get().getStatut() == 1 ) throw new UserException("cet adresse email est deja utilisé donc changez le !!", HttpStatus.CONFLICT);
 
         Optional<Profil> profilOptionnel = profilRepository.findByCodeProfil(request.getRole());
 
-        if(profilOptionnel.isEmpty() || profilOptionnel.get().getStatut() == 2) throw new ProduitException("ce profil n'existe pas!!");
+        if(profilOptionnel.isEmpty() || profilOptionnel.get().getStatut() == 2) throw new UserException("ce profil n'existe pas!!", HttpStatus.NOT_FOUND);
         profil = profilOptionnel.get();
         var user = User.builder()
                 .codeUser(CodeGenerator.codeUser(request.getLastname(),request.getFirstname()))
@@ -81,8 +90,8 @@ public class AuthenticationService {
                 .lastname(request.getLastname())
                 .email(request.getEmail())
                 .statut(1)
-                .enabled(true)
-                .password(passwordEncoder.encode("4321"))
+                .enabled(false)
+                .password(CodeGenerator.passwordCode(request.getLastname(), request.getFirstname()))
                // .password(CodeGenerator.passwordCode(request.getLastname(), request.getFirstname()))
                 .profil(profil)
                 .build();
@@ -90,6 +99,11 @@ public class AuthenticationService {
 
     }
 
+    /**
+     * Authentification de l'utilisateur
+     * @param request
+     * @return
+     */
     public UserReturnRequest authenticate(AuthenticationRequest request) {
          authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -99,7 +113,7 @@ public class AuthenticationService {
 
          var user = repository.findByEmail(request.getEmail()).orElseThrow();
          if(user == null) throw new ProduitException("email introuvable!!");
-         if(user.isEnabled()== false) throw new ProduitException("Impossible de vous connecter veuillez votre compte est inactif consulter vos mails!! ");
+         if(user.isEnabled()== false) throw new ProduitException("Impossible de vous connecter veuillez verifier si votre compte est inactif consulter vos mails!! ");
          var jwtToken = jwtService.generateToken(user);
          var reponse = UserReturnRequest.builder(
                 ).codeUser(user.getCodeUser())
@@ -121,31 +135,29 @@ public class AuthenticationService {
 
     }
 
-    public String resetPassword(ResetPasswordRequest request){
+    public User resetPassword(ResetPasswordRequest request){
         Optional<User> userOptional = repository.findByEmail(request.getEmail());
         utilisateur = userOptional.get();
-        //if(userOptional.isEmpty() || utilisateur.getStatut() == 2) throw new ProduitException("aucun compte avec ces informations!");
-        Optional<VerificationToken> tokenOptional = verificationTokenRepository.findByUser(utilisateur);
+        if(userOptional.isEmpty() || utilisateur.getStatut() == 2) throw new ProduitException("aucun compte avec ces informations!");
+        //Optional<VerificationToken> tokenOptional = verificationTokenRepository.findByUser(utilisateur);
 
-        if(tokenOptional.isEmpty()) throw new ProduitException("aucun token ne correspond à cet utilisateur!!");
-        verificationToken = tokenOptional.get();
-        if(!request.getVerificationToken().equals(verificationToken.getToken())) throw new ProduitException("votre token n'est pas valide reverifiez!");
-        LocalDateTime expirationDateTime = verificationToken.getExpirationTime()
-                .toInstant()
-                .atZone(ZoneId.systemDefault())
-                .toLocalDateTime();
-        if(LocalDateTime.now().isAfter(expirationDateTime)) throw new ProduitException("votre token a expiré");
+        //if(tokenOptional.isEmpty()) throw new ProduitException("aucun token ne correspond à cet utilisateur!!");
+      //  verificationToken = tokenOptional.get();
+       // if(!request.getVerificationToken().equals(verificationToken.getToken())) throw new ProduitException("votre token n'est pas valide reverifiez!");
+      //  LocalDateTime expirationDateTime = verificationToken.getExpirationTime()
+              //  .toInstant()
+               // .atZone(ZoneId.systemDefault())
+               // .toLocalDateTime();
+       // if(LocalDateTime.now().isAfter(expirationDateTime)) throw new ProduitException("votre token a expiré");
         //comparer l'ancien mot de passe à ce qu'il ya dans la base
-        if(!passwordEncoder.matches(utilisateur.getPassword(), request.getOldPassword())) throw new ProduitException("l'ancien mot de passe fourni est incorrecte!!");
+        if(!utilisateur.getPassword().equals(request.getOldPassword())) throw new ProduitException("l'ancien mot de passe fourni est incorrecte!!");
         utilisateur.setPassword(passwordEncoder.encode(request.getNewPassword()));
         utilisateur.setEnabled(true);
         // changer isEnabled à true
 
         // enregistre le user dans la bd
 
-        repository.save(utilisateur);
-
-       return "Mot de passe modifié avec succès!!";
+       return repository.save(utilisateur);
 
     }
 
@@ -157,7 +169,7 @@ public class AuthenticationService {
         body = Body.builder()
                 .url("http://localhost:4200/resetPassword")
                 .build();
-        emailSenderService.sendEmail(utilisateur.getEmail(), "Changer votre mot de passe","cc");
+        emailSenderService.sendEmail(utilisateur.getEmail(), "cliquer pour Changer votre mot de passe","http://localhost:4200/resetPassword");
         return "un mail vous est envoyé allez verifier!";
     }
 
@@ -217,5 +229,10 @@ public class AuthenticationService {
     public void saveUserVerificationToken(User registeredUser, String token) {
         var verificationToken = new VerificationToken(token,registeredUser);
         tokenRepository.save(verificationToken);
+    }
+
+    public Principal getCurrentUsername() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return (Principal) authentication.getPrincipal();
     }
 }

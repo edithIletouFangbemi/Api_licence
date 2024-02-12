@@ -8,6 +8,9 @@ import com.example.Api_version.utils.CodeGenerator;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -41,13 +44,30 @@ public class ParametreService {
         Optional<Parametre> param = parametreRepository.findByStatut(1);
         if(param.isPresent()){
             parametre = param.get();
-            parametre.setDateFin(LocalDateTime.now());
+            if(parametre.getDateFin() != null){
+                if(parametre.getDateFin().isBefore(request.getDateDebut().toInstant()
+                        .atZone(ZoneId.systemDefault()).toLocalDateTime())){
+
+                    parametre.setDateFin(request.getDateDebut().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime().minusDays(1));
+                    parametre.setStatut(2);
+                }
+                if(parametre.getDateFin().isAfter(request.getDateDebut().toInstant()
+                        .atZone(ZoneId.systemDefault()).toLocalDateTime())){
+                   // request.setDateDebut(Date.from(parametre.getDateFin()));
+                    parametre.setDateFin(parametre.getDateFin().minusDays(1));
+
+                }
+            }
+            parametre.setDateFin(request.getDateDebut().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime().minusDays(1));
             parametre.setStatut(2);
             parametreRepository.save(parametre);
         }
 
             parametre = new Parametre();
             parametre.setDateDebut(request.getDateDebut());
+            if(request.getDateFin() != null){
+                parametre.setDateFin(request.getDateFin().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
+            }
             parametre.setDescription(description);
             parametre.setStatut(1);
             parametre.setLibelle(CodeGenerator.libelleParametre(request.getParametres()));

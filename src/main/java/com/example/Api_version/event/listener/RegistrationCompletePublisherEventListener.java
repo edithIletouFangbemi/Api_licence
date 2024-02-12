@@ -37,7 +37,6 @@ public class RegistrationCompletePublisherEventListener implements
         String verificationToken = UUID.randomUUID().toString();
         String content = "Bienvenu sur la plateforme de Génération de Licence!<br><br>"
                 +"Mot de passe : "+ registeredUser.getPassword()+ "<br>"
-                +"Token : "+ verificationToken+ "<br>"
                 + "Cliquez sur le lien ci-dessous pour acceder a la plateforme:<br>"
                 + "<a href='http://localhost:4200/resetPassword'>Acceder a la plateforme</a>";
 
@@ -49,7 +48,7 @@ public class RegistrationCompletePublisherEventListener implements
         //5. send the email
         System.out.println(url);
         try {
-            emailSenderService.sendEmail(registeredUser.getEmail(), "Changer Mot de Passe"
+            emailSenderService.sendEmail(registeredUser.getEmail(), "Changer Mot de Passe "
                     +registeredUser.getLastname()+" "+registeredUser.getFirstname(),content);
         } catch (MessagingException e) {
             throw new RuntimeException(e);

@@ -29,6 +29,7 @@ public class ContratService {
 
     private final InstitutionService institutionService;
     private final ContratPrdouitRepository contratProduitRepository;
+    private final DetailContratRepository detailContratRepository;
     private final ModuleRepository moduleRepository;
     private Institution institution;
     private List<Institution> listeInstitution;
@@ -46,7 +47,7 @@ public class ContratService {
     private Contrat_Institution contrat;
     private int nbr;
 
-
+/*
     public Institution creerContrat(Contrat request){
         Optional<Institution> institutionOptional = institutionRepository.findByCodeInst(request.getInstitution());
         if(institutionOptional.isEmpty()) throw new ProduitException("aucune institution avec le code "+request.getInstitution());
@@ -153,7 +154,110 @@ public class ContratService {
 
         return institution;
     }
+    */
 
+    public Institution creerContrat(Contrat request){
+        Optional<Institution> institutionOptional = institutionRepository.findByCodeInst(request.getInstitution());
+        if(institutionOptional.isEmpty()) throw new ProduitException("aucune institution avec le code "+request.getInstitution());
+        institution = institutionOptional.get();
+
+        Optional<Produit> produitOptional = produitRepository.findByCodeProduit(request.getProduit());
+        if(produitOptional.isEmpty() || produitOptional.get().getStatut() == 2)
+            throw new ProduitException("aucun produit avec le code "+ request.getProduit());
+
+        var produit = new Produit();
+        produit = produitOptional.get();
+        Optional<Contrat_Institution> contratInstitutionOptional = contratRepository.findByInstitutionAndProduit(institution,produit);
+        if(contratInstitutionOptional.isPresent() && contratInstitutionOptional.get().getStatut() == 1 )
+            throw new ProduitException("le Produit "+produit.getNom()+" est déjà actif pour " +institution.getNomInst()
+            );
+
+
+        contrat = new Contrat_Institution();
+        contrat.setCodeContrat(CodeGenerator.codeContrat(institution.getNomInst(),request.getProduit()));
+        contrat.setLibelleContrat("Activation de "+produit.getNom()+" à "+institution.getNomInst());
+        contrat.setInstitution(institution);
+        contrat.setProduit(produit);
+        contrat.setDateDebut(request.getDateDebut());
+        contrat.setDateFin(request.getDateFin());
+        contrat.setTypeContrat(request.getTypeContrat());
+        switch (contrat.getTypeContrat()){
+            case "AgenceLimité_PosteLimité":{
+                contrat.setNbrAgence(request.getNbrAgence());
+                contrat.setNbrPosteTotal(0);
+                if(request.getNbrAgence() >  request.getNbrAgence()) throw new
+                        ProduitException("le nombre d'agence précisé dans le contrat est " +
+                        "inférieur au nombre d'agence séléctionné");
+            }
+            break;
+            case "AgenceLimité_PosteIllimité":{
+                contrat.setNbrAgence(request.getNbrAgence());
+                contrat.setNbrPosteTotal(0);
+                if(request.getNbrAgence() >  request.getNbrAgence()) throw new
+                        ProduitException("le nombre d'agence précisé dans le contrat est " +
+                        "inférieur au nombre d'agence séléctionné");
+            }
+            break;
+
+            case "AgenceIllimité_PosteIllimité":{
+                contrat.setNbrAgence(0);
+                contrat.setNbrPosteTotal(0);
+            }
+            break;
+            default:{
+                throw new ProduitException("vous devez fournir le type de contrat");
+            }
+        }
+        contrat.setStatut(1);
+        contrat =  contratRepository.save(contrat);
+
+        Produit finalProduit = produit;
+        request.getContratUnits().forEach(contratUnit -> {
+            Optional<Module> moduleOptional = moduleRepository.findByCodeModuleAndProduitAndStatut(contratUnit.getModule(), finalProduit,1);
+            if(moduleOptional.isEmpty()) throw new ProduitException("Aucun module de ce produit avec "+contratUnit.getModule());
+
+            var module = new Module();
+
+            module = moduleOptional.get();
+
+            Optional<Agence> agenceOptional = agenceRepository.findByInstitutionAndCodeAgenceAndStatut(institution,contratUnit.getAgence(),1);
+            if(agenceOptional.isEmpty()) throw new ProduitException("Aucun module de ce produit avec "+contratUnit.getAgence());
+            var agence = new Agence();
+
+            agence = agenceOptional.get();
+
+            Optional<DetailContrat> detailContratOptional = detailContratRepository.findByAgenceAndModuleAndStatut(agence,module,1);
+
+            if(detailContratOptional.isPresent()) throw new ProduitException(" ce module est deja actif pour l'agence "+agence.getNom());
+
+            var detail = new DetailContrat();
+
+            detail.setModule(module);
+            detail.setNbrPoste(contratUnit.getNbrPoste());
+            detail.setAgence(agence);
+            detail.setLibelle("Activation de "+module.getLibelleModule());
+            detail.setCodeDetailContrat(CodeGenerator.codeDetailContrat(agence.getCodeAgence()));
+            detail.setStatut(1);
+            detail.setDate_debut(request.getDateDebut());
+            detail.setDate_fin(request.getDateFin());
+            detail.setTypeContratModule(contratUnit.getType());
+
+            detailContratRepository.save(detail);
+
+
+
+        });
+
+        var historique = new Historique();
+        historique.setAction("Activation du produit "+ produit.getNom()+" pour l'institution "+institution.getNomInst());
+        historique.setStatut(1);
+        historique.setDateCreation(LocalDateTime.now());
+        historique.setAuteur("");
+
+        historyRepository.save(historique);
+
+        return institution;
+    }
     public List<DetailContratInst> lister(){
         List<Object[]> results = contratRepository.listeReturn();
         List<DetailContratInst> details = new ArrayList<>();
@@ -198,7 +302,7 @@ public class ContratService {
         List<Contrat_Institution> finalListeContrat = listeContrat;
         listeAgence.forEach(agence->{
            finalListeContrat.forEach(contrat->{
-               if(contrat.getDateFin().isBefore(now())) throw new ProduitException("le contrat de "+contrat.getProduit().getNom()
+               if(contrat.getDateFin().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime().isBefore(now())) throw new ProduitException("le contrat de "+contrat.getProduit().getNom()
                        +" a expiré"
                );
                agenceService.activerProduit(contrat.getProduit().getCodeProduit(), agence.getCodeAgence());
@@ -207,7 +311,7 @@ public class ContratService {
 
         return institution;
     }
-
+/*
     public Contrat_Institution ajoutAvenant(ContratUnit contratUnit){
         Optional<Produit> produitOptional = produitRepository.findByCodeProduitAndStatut(contratUnit.getProduit(),1);
 
@@ -261,7 +365,7 @@ public class ContratService {
 
         return contratRepository.save(contrat);
     }
-
+*/
     public List<Produit> productsByInst(String codeinst){
         institution = institutionService.OneInstitution(codeinst);
         List<Contrat_Institution> contratList = contratRepository.findAllByInstitutionAndStatut(institution, 1);

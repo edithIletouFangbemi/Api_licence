@@ -24,8 +24,7 @@ public class AgenceController {
     }
     @PostMapping("creer")
     public ResponseEntity<Agence> creer(@RequestBody AgenceRequest request){
-        return new ResponseEntity<Agence>(agenceService.creer(request.getNom(),request.getDescription(),
-                request.getAdresse(), request.getInstitutionCode()), HttpStatus.ACCEPTED);
+        return new ResponseEntity<Agence>(agenceService.creer(request), HttpStatus.ACCEPTED);
     }
     @GetMapping("getOne/{code}")
     public ResponseEntity<Agence> getOne(@PathVariable("code") String code){

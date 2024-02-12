@@ -10,6 +10,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AgenceRequest {
+    private int instId;
+    private String codeAgence;
     private String nom;
     private String description;
     private String adresse;

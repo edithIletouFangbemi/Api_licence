@@ -30,7 +30,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String jwt;
         String userEmail;
 
-        if (request.getServletPath().contains("utilisateur/authentication") ) {
+        if (request.getServletPath().contains("utilisateur/authentication") || request.getServletPath().contains("utilisateur/changer") ) {
             filterChain.doFilter(request, response);
             return;
         }
