@@ -39,7 +39,7 @@ public class AgenceService {
     private final DetailContratModuleRepository detailContratModuleRepository;
     private Institution institution;
     private Contrat_Institution contrat;
-    private AuthenticationService authenticationService;
+    private final AuthenticationService authenticationService;
     private List<Module> someModules;
     private Module module;
     private final ModuleService moduleService;
@@ -50,7 +50,7 @@ public class AgenceService {
     private Agence agence;
     private String caractere;
     private int nbrAgence;
-    private HistoryRepository historyRepository;
+    private final HistoryRepository historyRepository;
 
     /**
      * Création d'une agence
@@ -59,12 +59,13 @@ public class AgenceService {
      */
     @Transactional
     public Agence creer(AgenceRequest request){
-        Optional<Institution> inst = institutionRepository.findByCodeInstAndStatut(request.getInstitutionCode(),1);
+        Optional<Institution> inst = institutionRepository.findByIdAndStatut(request.getInstId(),1);
+
+
+        if(inst.isEmpty()) throw  new InstitutionException("aucune institution avec l'identifiant "+ request.getInstitutionCode(), HttpStatus.NOT_FOUND);
 
         institution = inst.get();
-
-        if(inst.isEmpty()) throw  new InstitutionException("aucune institution avec le code "+ request.getInstitutionCode(), HttpStatus.NOT_FOUND);
-/*
+        /*
        Optional<Contrat_Institution> contratInstitutionOptional = contratRepository.findByInstitutionAndStatut(institution,1);
         if(contratInstitutionOptional.isPresent()){
             contrat = contratInstitutionOptional.get();
@@ -79,12 +80,20 @@ public class AgenceService {
 
         }*/
 
-        Optional<Agence> agenceOptional = agenceRepository.findByNomAndInstitution(request.getNom()
+        Optional<Agence> agenceOptional = agenceRepository.findByCodeAgenceIgnoreCaseAndInstitution(request.getCodeAgence()
+                , institution);
+
+        Optional<Agence> agenceOptional1 = agenceRepository.findByNomIgnoreCaseAndInstitution(request.getNom()
                 , institution);
 
         if(agenceOptional.isPresent()) throw new AgenceException("Une agence de l'institution "
                 + institution.getNomInst()
-                +" existe deja avec le nom " + request.getNom());
+                +" existe deja avec le code " + request.getCodeAgence(), HttpStatus.ALREADY_REPORTED);
+
+
+        if(agenceOptional1.isPresent()) throw new AgenceException("Une agence de l'institution "
+                + institution.getNomInst()
+                +" existe deja avec le nom " + request.getNom(), HttpStatus.ALREADY_REPORTED);
 
         Agence newAgence = new Agence();
 
@@ -96,7 +105,9 @@ public class AgenceService {
         newAgence.setStatut(1);
         newAgence.setDateCreation(LocalDateTime.now());
         newAgence = agenceRepository.save(newAgence);
-        Agence finalNewAgence = newAgence;
+
+       // Agence finalNewAgence = newAgence;
+
         /*
         if(contrat != null){
             produits( institution.getCodeInst(),contrat.getCodeContrat()).forEach(produit->{
@@ -127,26 +138,56 @@ public class AgenceService {
         historique.setAction("Création de l'agence "+newAgence.getNom()+" de l'institution "+institution.getNomInst());
         historique.setStatut(1);
         historique.setDateCreation(LocalDateTime.now());
-        historique.setAuteur(authenticationService.getCurrentUsername().getName());
+        historique.setAuteur(authenticationService.getCurrentUsername());
 
         historyRepository.save(historique);
         return newAgence;
-
     }
+    @Transactional
+    public Agence update(int id, AgenceRequest request){
+        System.out.println(request);
+        Optional<Institution> inst = institutionRepository.findById(request.getInstId());
+        if(inst.isEmpty() || inst.get().getStatut() == 2) throw new AgenceException("aucune institution avec l'identifiant "+request.getInstId(), HttpStatus.NOT_FOUND);
+        institution = inst.get();
 
-    public Agence update(String code, AgenceRequest request){
-        Optional<Institution> inst = institutionRepository.findByCodeInst(request.getInstitutionCode());
-        Optional<Agence> agenceOptional = agenceRepository.findByCodeAgenceAndInstitution(code,inst.get());
-        if(agenceOptional.isEmpty() || agenceOptional.get().getStatut() == 2) throw new AgenceException("aucune agence avec l'identifiant "+code);
+        Optional<Agence> agenceOptional = agenceRepository.findByIdAndInstitution(id,institution);
+        if(agenceOptional.isEmpty() || agenceOptional.get().getStatut() == 2) throw new AgenceException("aucune agence avec l'identifiant "+id, HttpStatus.NOT_FOUND);
+
+        Optional<Agence> agenceOptional1 = agenceRepository.findByNomIgnoreCaseAndInstitution(request.getNom()
+                , institution);
+
+        Optional<Agence> agenceOptional2 = agenceRepository.findByCodeAgenceIgnoreCaseAndInstitution(request.getCodeAgence()
+                , institution);
+
         Agence agence = agenceOptional.get();
 
+
+        if(agenceOptional2.isPresent() && (agenceOptional2.get().getId() != agence.getId())) throw new AgenceException("Une agence de l'institution "
+                + institution.getNomInst()
+                +" existe deja avec le code " + request.getCodeAgence(), HttpStatus.ALREADY_REPORTED);
+
+
+        if(agenceOptional1.isPresent() && (agenceOptional1.get().getId() != agence.getId())) throw new AgenceException("Une agence de l'institution "
+                + institution.getNomInst()
+                +" existe deja avec le nom " + request.getNom(), HttpStatus.ALREADY_REPORTED);
+
+
+        var historique = new Historique();
+        historique.setAction("Modification de l'agence "+ agence.getNom()+" de l'institution "+institution.getNomInst()+" en "+ request.getNom());
+        historique.setStatut(1);
+        historique.setDateCreation(LocalDateTime.now());
+        historique.setAuteur(authenticationService.getCurrentUsername());
+
         agence.setNom(request.getNom());
+        agence.setCodeAgence(request.getCodeAgence());
         agence.setAdresse(request.getAdresse());
         agence.setDescription(request.getDescription());
 
+        historyRepository.save(historique);
+
         return agenceRepository.save(agence);
     }
-
+    @Transactional
     public List<Produit> produits(String codeinst, String codeContrat){
         List<Object[]> results = agenceRepository.Produits(codeinst, codeContrat);
 
@@ -167,59 +208,104 @@ public class AgenceService {
         return products;
 
     }
-
+    @Transactional
     public List<Agence> liste(){
+
+        var historique = new Historique();
+        historique.setAction("Consulter la liste de toutes les agences ");
+        historique.setStatut(1);
+        historique.setDateCreation(LocalDateTime.now());
+        historique.setAuteur(authenticationService.getCurrentUsername());
+
+        historyRepository.save(historique);
+
         return agenceRepository.findAll();
     }
-
+    @Transactional
     public List<Agence> ListeDeleted(){
+
+        var historique = new Historique();
+        historique.setAction("Consulter la liste des agences supprimées ");
+        historique.setStatut(1);
+        historique.setDateCreation(LocalDateTime.now());
+        historique.setAuteur(authenticationService.getCurrentUsername());
+        historyRepository.save(historique);
+
         return agenceRepository.findAllByStatut(2);
     }
+    @Transactional
+    public List<Agence> ListeParInstitution(int id){
+        Optional<Institution> inst = institutionRepository.findById(id);
+        if(inst.isEmpty() || inst.get().getStatut() == 2) throw new InstitutionException("aucune institution avec l'identifiant "+id,HttpStatus.NOT_FOUND);
+        institution = inst.get();
 
-    public List<Agence> ListeParInstitution(String institutionCode){
-        Optional<Institution> inst = institutionRepository.findByCodeInst(institutionCode);
-        if(inst.isEmpty() || inst.get().getStatut() == 2) throw new InstitutionException("aucune institution avec l'identifiant "+institutionCode);
-        return agenceRepository.findAllByInstitutionAndStatut(inst.get(),1);
+        var historique = new Historique();
+        historique.setAction("Consulter la liste des agences de l'institution "+institution.getNomInst());
+        historique.setStatut(1);
+        historique.setDateCreation(LocalDateTime.now());
+        historique.setAuteur(authenticationService.getCurrentUsername());
+        historyRepository.save(historique);
+
+        return agenceRepository.findAllByInstitutionAndStatut(institution,1);
     }
+    @Transactional
+    public Agence uneAgence(int id){
+        Optional<Agence> agence1 = agenceRepository.findById(id);
+        if(agence1.isEmpty() || agence1.get().getStatut() == 2) throw new AgenceException("aucune agence avec l'identifiant "+ id, HttpStatus.NOT_FOUND);
+        agence = agence1.get();
 
-    public Agence uneAgence(String code){
-        Optional<Agence> agence = agenceRepository.findByCodeAgence(code);
-        if(agence.isEmpty() || agence.get().getStatut() == 2) throw new AgenceException("aucune agence avec le code "+ code);
-        return agence.get();
+        var historique = new Historique();
+        historique.setAction("Consulter l'agence_"+agence.getNom()+" de l'institution "+institution.getNomInst());
+        historique.setStatut(1);
+        historique.setDateCreation(LocalDateTime.now());
+        historique.setAuteur(authenticationService.getCurrentUsername());
+        historyRepository.save(historique);
+
+        return agence;
     }
-
-    public String supprimer(String code){
-        Optional<Agence> agence = agenceRepository.findByCodeAgence(code);
-        if(agence.isEmpty() || agence.get().getStatut() == 2) throw new AgenceException("aucune agence avec le code "+ code);
+    @Transactional
+    public String supprimer(int id){
+        Optional<Agence> agence = agenceRepository.findById(id);
+        if(agence.isEmpty() || agence.get().getStatut() == 2) throw new AgenceException("aucune agence avec l'identifiant "+ id, HttpStatus.NOT_FOUND);
         Agence agence1 = agence.get();
         agence1.setStatut(2);
         agenceRepository.save(agence1);
 
+        var historique = new Historique();
+        historique.setAction("suppression de l'agence_"+agence1.getNom()+" de l'institution "+agence1.getInstitution().getNomInst());
+        historique.setStatut(1);
+        historique.setDateCreation(LocalDateTime.now());
+        historique.setAuteur(authenticationService.getCurrentUsername());
+
+        historyRepository.save(historique);
+
         return "suppression fait avec succès!";
     }
 
-    public Agence findAgence(Institution institution, String codeAgence){
-        Optional<Agence> agenceOptional = agenceRepository.findByInstitutionAndCodeAgenceAndStatut(institution,codeAgence,1);
+    public Agence findAgence(Institution institution, int idAgence){
+        Optional<Agence> agenceOptional = agenceRepository.findByIdAndInstitutionAndStatut(idAgence,institution,1);
 
         if(agenceOptional.isEmpty()) throw new ProduitException("agence inexistante dans la liste des agence de "+ institution.getNomInst());
         return agenceOptional.get();
     }
 
     public Agence activerModule(ActivationRequest request){
-        agence = uneAgence(request.getCodeAgence());
+       // agence = uneAgence(request.getCodeAgence());
         if(agence == null) throw new ProduitException("Agence n'existe pas!");
 
         institution = institutionRepository.findByCodeInstAndStatut(request.getCodeInst(),1).get();
         if(institution == null) throw new ProduitException("L'institution n'existe pas!!");
         if(!agence.getInstitution().equals(institution)) throw new ProduitException("Cette institution ne correspond" +
                 " pas à l'institution de cette agence");
-        produit = produitService.read(request.getCodeProduit());
+        //produit = produitService.read(request.getCodeProduit());
         if(produit == null) throw new ProduitException("Aucun produit avec ce code");
-        Optional<Contrat_Institution> contratInstitutionOptional = contratRepository.findByInstitutionAndProduit(institution,produit);
+
+        Optional<Contrat_Institution> contratInstitutionOptional = contratRepository.findByInstitutionAndStatut(institution,1);
         if(contratInstitutionOptional.isEmpty()) throw new ProduitException("Cet institution n'a pas "+produit.getNom()+" activé");
         contrat = contratInstitutionOptional.get();
         request.getModules().forEach(moduleActivation->{
-            module = moduleService.read(moduleActivation.getCodeModule());
+           // module = moduleService.read(moduleActivation.getCodeModule());
+            module = moduleService.read(1);
             Optional<DetailContrat> detailContratOptional = detailContratRepository.findByAgenceAndModuleAndStatut(
                     agence, module,
                     1
@@ -230,7 +316,7 @@ public class AgenceService {
                     ProduitException("ce module est deja actif pour cette agence!!");
 
             detailContrat = new DetailContrat();
-            detailContrat.setCodeDetailContrat(CodeGenerator.codeDetailContrat(agence.getNom()));
+            //   detailContrat.setCodeDetailContrat(CodeGenerator.codeDetailContrat(agence.getNom()));
             detailContrat.setModule(module);
             detailContrat.setLibelle("Activation de "+ module.getLibelleModule());
             detailContrat.setStatut(1);
@@ -307,7 +393,7 @@ public class AgenceService {
                 String codedetail = (String)result[0];
                 int statut = ((Number)result[5]).intValue();
                 String codeagence = (String)result[6];
-                Agence agence = agenceRepository.findByCodeAgence(codeAgence).get();
+                Agence agence = agenceRepository.findByCodeAgenceIgnoreCase(codeAgence).get();
                 detailContrat.setCodeDetailContrat(codedetail);
                 detailContrat.setAgence(agence);
                 detailContrat.setStatut(statut);
@@ -319,27 +405,28 @@ public class AgenceService {
     }
 
     public Agence activerProduit(String codeProduit, String codeagence){
-        Optional<Agence> agenceOptional = agenceRepository.findByCodeAgence(codeagence);
+        Optional<Agence> agenceOptional = agenceRepository.findByCodeAgenceIgnoreCase(codeagence);
         if(agenceOptional.isEmpty() ) throw new ProduitException("Aucune agence n'existe avec ce code "+codeagence);
         if(agenceOptional.isPresent() && agenceOptional.get().getStatut() == 2) throw new ProduitException("Aucune agence avec le code "+codeagence);
         var agence = agenceOptional.get();
-        var produit = produitService.read(codeProduit);
+       // var produit = produitService.read(codeProduit);
+        var produit = new Produit();
 
         if(produit == null) throw new ProduitException("Aucun produit avec le code "+codeProduit);
 
-        var contrat = contratRepository.findByInstitutionAndProduit(agence.getInstitution(),produit).get();
+      //  var contrat = contratRepository.findByInstitutionAndProduit(agence.getInstitution(),produit).get();
 
         if(contrat != null && contrat.getStatut() == 2 ) throw new ProduitException("le produit "+produit.getNom()
                 +" n'est pas actif pour l'institution "+agence.getInstitution().getNomInst());
 
-        var modules = moduleService.moduleByProduit(produit.getCodeProduit());
+        var modules = moduleService.moduleByProduit(produit.getId());
         modules.forEach(mod->{
             if(mod.getTypeModule() == "standard"){
                 var detail = new DetailContrat();
 
                 detail.setAgence(agence);
                 detail.setStatut(1);
-                detail.setCodeDetailContrat(CodeGenerator.codeDetailContrat(agence.getNom()));
+                //detail.setCodeDetailContrat(CodeGenerator.codeDetailContrat(agence.getNom()));
                 detail.setModule(mod);
                 detail.setLibelle("Activation du module "+ mod.getLibelleModule());
                 detail.setDate_debut(Date.from(now().atZone(ZoneId.systemDefault()).toInstant()));

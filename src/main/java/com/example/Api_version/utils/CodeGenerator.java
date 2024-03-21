@@ -6,8 +6,11 @@ import java.util.Random;
  * Classe de Génération de code simulé aux identifiants des objets en base de donnée
  */
 public class CodeGenerator {
-    private static final String ALPHABET = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    private static final String ALPHABET = "abc@defghij!klmnopqr$stuvwx&yzABCED£FGHIJKLMNOPQRSTU#VWXYZ0123456789";
 
+    public static final String secretKey = "@789zA#Bj=klmnopq&rC12!34";
+    public static final String frontServerUrl = "http://localhost:4200";
+    public static final String frontResetPasswordUrl = "/resetPassword";
     static StringBuilder codeBuilder = new StringBuilder();
 
    public static String generateCode(String nom, String identifiant){
@@ -131,9 +134,10 @@ public class CodeGenerator {
         return codeBuilder.toString();
     }
 
-    public static String codeDetailContrat(String nomAgence){
+    public static String codeDetailContrat(String nomAgence, String nomModule){
         codeBuilder = new StringBuilder();
         codeBuilder.append(nomAgence.substring(0,3));
+        codeBuilder.append(nomModule.substring(0,3));
         Random random = new Random();
         for (int i = 0; i < 2; i++) {
             int index = random.nextInt(ALPHABET.length());
@@ -201,6 +205,21 @@ public class CodeGenerator {
         }
 
         return codeBuilder.toString();
+    }
+
+
+    public static String generateRandomString(int length) {
+        String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        Random random = new Random();
+        StringBuilder sb = new StringBuilder(length);
+
+        for (int i = 0; i < length; i++) {
+            int randomIndex = random.nextInt(characters.length());
+            char randomChar = characters.charAt(randomIndex);
+            sb.append(randomChar);
+        }
+
+        return sb.toString();
     }
 
 

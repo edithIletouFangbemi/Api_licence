@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("soushabilitation/")
+@RequestMapping("/api_licence/soushabilitation/")
 @RequiredArgsConstructor
 public class SousHabilitationController {
     private final SousHabilitationService sousHabilitationService;

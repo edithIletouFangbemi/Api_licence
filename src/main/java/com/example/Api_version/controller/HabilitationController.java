@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @Controller
-@RequestMapping("habilitation/")
+@RequestMapping("/api_licence/habilitation/")
 @CrossOrigin
 public class HabilitationController {
     private HabilitationService habilitationService;

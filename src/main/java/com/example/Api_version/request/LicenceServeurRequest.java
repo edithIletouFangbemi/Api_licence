@@ -8,8 +8,12 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 public class LicenceServeurRequest {
-  private String institutionCode;
-  private String agenceCode;
-  private String produit;
-  private List<String> modules;
+  private Integer institutionCode;
+  private Integer  agenceCode;
+  private Integer produit;
+  private List<Integer> modules;
+  private String adresseIp;
+  private String adresseMac;
+  private String idMachine;
+  private String idDisqueDur;
 }

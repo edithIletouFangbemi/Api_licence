@@ -8,10 +8,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Date;
 import java.util.List;
 
 @Controller
-@RequestMapping("parametre/")
+@RequestMapping("/api_licence/parametre/")
 @CrossOrigin
 public class ParametreController {
     private ParametreService parametreService;
@@ -21,22 +22,23 @@ public class ParametreController {
     }
     @PostMapping("creer")
     public ResponseEntity<Parametre> create(@RequestBody ParametreRequest request){
+        System.out.println(request);
         return new ResponseEntity<Parametre>(parametreService.creer(request), HttpStatus.CREATED);
     }
-    @GetMapping("{code}")
-    public ResponseEntity<Parametre> getOne(@PathVariable("code") String code){
-        return ResponseEntity.ok(parametreService.getOne(code));
+    @GetMapping("{id}")
+    public ResponseEntity<Parametre> getOne(@PathVariable("id") int id){
+        return ResponseEntity.ok(parametreService.getOne(id));
     }
     @GetMapping("all")
     public ResponseEntity<List<Parametre>> liste(){
         return ResponseEntity.ok(parametreService.lister());
     }
-    @PutMapping("update/{code}")
-    public ResponseEntity<Parametre> editer(@PathVariable("code") String code, @RequestBody ParametreRequest request){
-        return ResponseEntity.ok(parametreService.editer(code,request));
+    @PutMapping("update/{id}")
+    public ResponseEntity<Parametre> editer(@PathVariable("id") int id, @RequestBody ParametreRequest request){
+        return ResponseEntity.ok(parametreService.editer(id,request));
     }
-    @DeleteMapping("supprime/{code}")
-    public ResponseEntity<Parametre> supprimer(@PathVariable("code") String code){
-        return ResponseEntity.ok(parametreService.supprimer(code));
+    @DeleteMapping("supprime/{id}/{dateCreation}")
+    public ResponseEntity<Parametre> supprimer(@PathVariable("id") int id , @PathVariable("dateCreation") Date dateCreation){
+        return ResponseEntity.ok(parametreService.supprimer(id, dateCreation));
     }
 }

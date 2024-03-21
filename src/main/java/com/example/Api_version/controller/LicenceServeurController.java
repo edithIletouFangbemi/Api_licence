@@ -21,7 +21,7 @@ import java.util.List;
 @RestController
 @RequiredArgsConstructor
 @CrossOrigin
-@RequestMapping("licenceServeur/")
+@RequestMapping("/api_licence/licenceServeur/")
 public class LicenceServeurController {
 
     private final LicenceServeurService licenceServeurService;
@@ -29,6 +29,7 @@ public class LicenceServeurController {
 
     @PostMapping("creer")
     public ResponseEntity<List<LicenceReturnRequest2>> creer(@RequestBody LicenceServeurRequest request) throws Exception {
+        System.out.println(request);
         return new ResponseEntity<List<LicenceReturnRequest2>>(licenceServeurService.creer(request),HttpStatus.CREATED);
     }
     @GetMapping("liste")
@@ -70,9 +71,19 @@ public class LicenceServeurController {
     public ResponseEntity<List<Module>> listeModule(@PathVariable("codeproduit") String codeproduit, @PathVariable("codeagence") String codeagence){
         return ResponseEntity.ok(licenceServeurService.listeModule(codeproduit, codeagence));
     }
-    @GetMapping("telecharger/{codelicence}")
-    public ResponseEntity<DownloadRequest> telecharger(@PathVariable("codelicence") String codelicence) throws Exception {
-        return ResponseEntity.ok(licenceServeurService.telecharger(codelicence));
+   /* @GetMapping("telecharger/{idLicence}")
+    public ResponseEntity<DownloadRequest> telecharger(@PathVariable("idLicence") int idLicence) throws Exception {
+        return ResponseEntity.ok(licenceServeurService.telecharger(idLicence));
+    } */
+
+    @DeleteMapping("activerLicence/{idLicence}")
+    public ResponseEntity<LicenceReturnRequest> activerLicence(@PathVariable("idLicence") int idLicence){
+        return ResponseEntity.ok(licenceServeurService.activerLicence(idLicence));
+    }
+
+    @DeleteMapping("desactiverLicence/{idLicence}")
+    public ResponseEntity<LicenceReturnRequest> desactiverLicence(@PathVariable("idLicence") int idLicence){
+        return ResponseEntity.ok(licenceServeurService.desactiverLicence(idLicence));
     }
 
 }

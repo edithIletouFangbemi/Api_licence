@@ -1,8 +1,6 @@
 package com.example.Api_version.entities;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -17,6 +15,8 @@ import java.time.LocalDateTime;
 @Data
 public class Poste {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
     private String codePoste;
     @NotBlank(message = "Obligatoire!!")
     private String adresseMac;

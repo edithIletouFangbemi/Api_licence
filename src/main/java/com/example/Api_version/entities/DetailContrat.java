@@ -20,6 +20,8 @@ import java.util.Date;
 @Builder
 public class DetailContrat {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
     private String codeDetailContrat;
     private String libelle;
     private Date date_debut;
@@ -29,7 +31,11 @@ public class DetailContrat {
     private int statut;
     @ManyToOne
     private Agence agence;
-    @OneToOne
+    @ManyToOne
     private Module module;
+    @ManyToOne
+    @JsonIgnoreProperties
+    private Sous_Contrat sousContrat;
+
 
 }

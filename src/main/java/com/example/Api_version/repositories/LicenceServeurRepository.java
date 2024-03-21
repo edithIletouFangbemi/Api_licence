@@ -3,18 +3,22 @@ package com.example.Api_version.repositories;
 import com.example.Api_version.entities.Agence;
 import com.example.Api_version.entities.LicenceServeur;
 import com.example.Api_version.entities.Module;
+import com.example.Api_version.entities.Poste;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface LicenceServeurRepository extends JpaRepository<LicenceServeur,String> {
+public interface LicenceServeurRepository extends JpaRepository<LicenceServeur, Integer> {
     Optional<LicenceServeur> findByAgenceAndStatut(Agence agence, int statut);
     List<LicenceServeur> findAllByStatut(int statut);
+
+    Optional<LicenceServeur> findByPosteAndModuleAndAgenceAndStatut(Poste poste, Module module,Agence agence,int statut);
     Optional<LicenceServeur> findByCodeAndStatut(String code, int statut);
 
     @Query(value = "select DIStinct l.code as code, l.datecreation as datecreation, l.statut as statut,\n" +
@@ -35,17 +39,12 @@ public interface LicenceServeurRepository extends JpaRepository<LicenceServeur,S
             "\t\t\t \n" +
             "\t\t\t ;", nativeQuery = true)
     List<Object[]> licenceAgenceByInstitution(@Param("codeinst")String codeinst);
-
-    @Query(value = "select DIStinct l.libelle, l.key , a.codeagence, i.code, m.codemodule\n" +
-            "             \n" +
-            "            from licenceserveur l JOIN agence a on l.agence_codeagence = a.codeagence JOIN institution i on\n" +
-            "            a.institution_codeinst = i.codeinst join detailcontrat d on d.agence_codeagence = a.codeagence join " +
-            " module m on d.module_codemodule = m.codemodule\n" +
-            "            where i.statut = 1 AND a.statut = 1  AND l.statut = 1 AND a.statut = 1" +
-            " AND l.code = :codelicence \n" +
-            "\t\t\t GROUP BY  l.code , a.codeagence, i.codeinst\n" +
-            "\t\t\t ;", nativeQuery = true)
-    Object[] codeForDownload(@Param("codelicence")String codelicence);
+    /*
+    @Query("select * from LicenceServeur l " +
+            "where l.statut = 1 AND l.id = :idLicence ")
+    LicenceServeur codeForDownload(@Param("idLicence")int idLicence);
+    */
+    Optional<LicenceServeur> findByIdAndStatut(int id, int statut);
     @Query(value = "SELECT DISTINCT a.codeagence, a.nom " +
             "FROM agence a JOIN institution i ON a.institution_codeinst = i.codeinst  JOIN contrat_institution c  ON i.codeinst = c.institution_codeinst " +
             "WHERE c.statut = 1 AND i.codeinst = :codeInst AND i.statut = 1 AND" +
@@ -85,4 +84,11 @@ public interface LicenceServeurRepository extends JpaRepository<LicenceServeur,S
     List<Object[]> listemodule(@Param("codeagence") String codeagence, @Param("codeproduit") String codeproduit);
 
     Optional<LicenceServeur> findByAgenceAndModuleAndStatut(Agence agence, Module module, int statut);
+    @Query("select ls.id, ls.agence.nom, ls.poste.idMachine, ls.module.libelleModule, ls.dateCreation, ls.statut from LicenceServeur ls" +
+            " where ls.statut = :statut AND ls.dateCreation BETWEEN :dateDebut AND :dateFin " +
+            " AND ls.agence.id = :agenceId AND ls.poste.id IN :posteIds AND ls.module.id IN :moduleIds ")
+    List<Object[]> situationLicenceServeur(@Param("agenceId") int agenceId,@Param("posteIds") List<Integer> posteIds,@Param("moduleIds") List<Integer> moduleIds
+            , @Param("dateDebut") Date dateDebut, @Param("dateFin") Date dateFin, @Param("statut") int statut);
+    @Query(" select ls from LicenceServeur ls where ls.statut = :statut AND ls.id IN :listeIdLicence")
+    List<LicenceServeur> findAllByIdAndStatut(@Param("listeIdLicence") List<Integer> listeIdLicence, @Param("statut") int statut);
 }

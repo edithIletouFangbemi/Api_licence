@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @Controller
-@RequestMapping("detail_contrat/")
+@RequestMapping("/api_licence/detail_contrat/")
 @RequiredArgsConstructor
 @CrossOrigin
 public class DetailContratController {
@@ -25,8 +25,12 @@ public class DetailContratController {
     public ResponseEntity<List<DetailContrat>> lister(){
         return ResponseEntity.ok(detailContratService.liste());
     }
-    @GetMapping("getOne/{code}")
-    public ResponseEntity<DetailContrat> getOne(@PathVariable("code") String code){
-        return ResponseEntity.ok(detailContratService.getOne(code));
+    @GetMapping("getOne/{id}")
+    public ResponseEntity<DetailContrat> getOne(@PathVariable("id") int id){
+        return ResponseEntity.ok(detailContratService.getOne(id));
+    }
+    @GetMapping("allByAgence/{idAgence}")
+    public ResponseEntity<List<DetailContrat>> getAllByAgence(@PathVariable("idAgence") int idAgence){
+        return ResponseEntity.ok(detailContratService.getAllByAgence(idAgence));
     }
 }

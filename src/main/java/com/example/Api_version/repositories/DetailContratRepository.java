@@ -13,9 +13,8 @@ import java.util.Optional;
 public interface DetailContratRepository extends JpaRepository<DetailContrat,String> {
     Optional<DetailContrat> findByCodeDetailContrat(String codeDetailContrat);
     Optional<DetailContrat> findByCodeDetailContratAndStatut(String codeDetailContrat, int statut);
-
-    Optional<DetailContrat> findByAgenceAndStatut(Agence agence, int statut);
-
+    List<DetailContrat> findByAgenceAndStatut(Agence agence, int statut);
+    Optional<DetailContrat> findByIdAndStatut(int id, int statut);
     List<DetailContrat> findAllByStatut(int statut);
     Optional<DetailContrat> findByAgenceAndModuleAndStatut(Agence agence, Module module, int statut);
 }

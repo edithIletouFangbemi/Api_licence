@@ -1,7 +1,6 @@
 package com.example.Api_version.entities;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,11 +16,15 @@ import java.util.Date;
 @NoArgsConstructor
 public class Parametre {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
     private String codeParametre;
     private String libelle;
     private String description;
     private int statut;
+    @Temporal(TemporalType.DATE)
     private Date dateDebut;
-    private LocalDateTime dateFin;
+    @Temporal(TemporalType.DATE)
+    private Date dateFin;
 
 }

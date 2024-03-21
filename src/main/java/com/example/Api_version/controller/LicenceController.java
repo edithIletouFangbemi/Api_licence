@@ -1,15 +1,14 @@
 package com.example.Api_version.controller;
 
 import com.example.Api_version.Services.LicenceService;
-import com.example.Api_version.entities.Agence;
-import com.example.Api_version.entities.Institution;
+import com.example.Api_version.entities.*;
 import com.example.Api_version.entities.Module;
-import com.example.Api_version.entities.Produit;
 import com.example.Api_version.request.*;
 import com.example.Api_version.utils.CodeGenerator;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.FileUtils;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -20,11 +19,12 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileWriter;
+import java.util.Date;
 import java.util.List;
 
 @RestController
 @CrossOrigin
-@RequestMapping("licence/")
+@RequestMapping("/api_licence/licence/")
 @RequiredArgsConstructor
 public class LicenceController {
     private final LicenceService licenceService;
@@ -46,8 +46,8 @@ public class LicenceController {
         return ResponseEntity.ok(licenceService.moduleList(codeagence,codeproduit));
     }
     @PostMapping("generer")
-    public ResponseEntity<List<LicenceReturnRequest>> licence(@RequestBody LicenceRequest request) throws Exception {
-        return new ResponseEntity<List<LicenceReturnRequest>>(licenceService.genererLicence(request), HttpStatus.CREATED);
+    public ResponseEntity<List<LicenceReturnRequest2>> licence(@RequestBody LicenceRequest request) throws Exception {
+        return new ResponseEntity<List<LicenceReturnRequest2>>(licenceService.genererLicence(request), HttpStatus.CREATED);
     }
 
     @GetMapping("recapLicence")
@@ -56,12 +56,12 @@ public class LicenceController {
     }
     @GetMapping("unelicence/codeLicence")
     public ResponseEntity<LicenceReturnRequest> getLicence(@PathVariable("codeLicence") String codeLicence) throws Exception {
-        return ResponseEntity.ok(licenceService.getLicence(codeLicence));
+        return ResponseEntity.ok(licenceService.downloadLicence(codeLicence));
     }
 
-    @GetMapping("telecharger/{codeLicence}")
-    public void download(@PathVariable("codeLicence") String codeLicence){
-        licenceService.download(codeLicence);
+    @GetMapping("telecharger/{idLicence}")
+    public ResponseEntity<DownloadRequest> download(@PathVariable("idLicence") int idLicence){
+       return ResponseEntity.ok(licenceService.download(idLicence));
     }
 
     @GetMapping("all-active")
@@ -80,6 +80,40 @@ public class LicenceController {
     @GetMapping("recap-poste/{codeagence}")
     public ResponseEntity<List<PosteDetailRequest>> recapPoste(@PathVariable("codeagence") String codeagence){
         return ResponseEntity.ok(licenceService.recapPoste(codeagence));
+    }
+    @GetMapping("situationLicence")
+    public ResponseEntity<List<SituationLicenceRequest>> situationLicence(
+            @RequestParam(value = "agenceId", required = true) int agenceId,
+            @RequestParam(value = "posteIds", required = true) List<Integer> posteIds,
+            @RequestParam(value = "moduleIds", required = true) List<Integer> moduleIds,
+            @DateTimeFormat(pattern = "yyyy-MM-dd") @RequestParam(value = "dateDebut", required = true) Date dateDebut,
+            @DateTimeFormat(pattern = "yyyy-MM-dd") @RequestParam(value = "dateFin", required = true) Date dateFin,
+            @RequestParam(value = "typeLicence", required = true) String typeLicence,
+            @RequestParam(value = "statut", required = true) int statut
+    ){
+        return ResponseEntity.ok(licenceService.situationLicence(
+                agenceId, posteIds, moduleIds, typeLicence, dateDebut, dateFin, statut
+        ));
+    }
+    @GetMapping("allPostesByAgence/{agenceId}")
+    public ResponseEntity<List<Poste>> getAllPosteByAgence(@PathVariable("agenceId") int agenceId){
+        return ResponseEntity.ok(licenceService.getAllPosteByAgenceAndStatut(agenceId));
+    }
+    @GetMapping("licencesForDownload")
+    public ResponseEntity<List<LicenceReturnRequest2>> getLicencesForDownload(
+            @RequestParam(value = "listeIdLicence" , required = true) List<Integer> listeIdlicence,
+            @RequestParam(value = "typeLicence" , required = true) String typeLicence
+    ){
+        return ResponseEntity.ok(licenceService.getLicencesForDownload(listeIdlicence, typeLicence));
+    }
+    @DeleteMapping("activerLicence/{idLicence}")
+    public ResponseEntity<LicenceReturnRequest> activerLicence(@PathVariable("idLicence") int idLicence){
+        return ResponseEntity.ok(licenceService.activerLicence(idLicence));
+    }
+
+    @DeleteMapping("desactiverLicence/{idLicence}")
+    public ResponseEntity<LicenceReturnRequest> desactiverLicence(@PathVariable("idLicence") int idLicence){
+        return ResponseEntity.ok(licenceService.desactiverLicence(idLicence));
     }
 
 }

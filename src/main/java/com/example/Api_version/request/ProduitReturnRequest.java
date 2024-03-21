@@ -4,6 +4,7 @@ import lombok.Data;
 
 @Data
 public class ProduitReturnRequest {
+    private int id;
     private String codeProduit;
     private String nom;
     private String description;

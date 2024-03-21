@@ -31,6 +31,5 @@ public class EmailSenderService {
 
         mailSender.send(message);
 
-
     }
 }

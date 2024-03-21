@@ -17,7 +17,7 @@ import java.util.List;
  * Controlleur de Gestion des Institutions
  */
 @RestController
-@RequestMapping("institution/")
+@RequestMapping("/api_licence/institution/")
 @RequiredArgsConstructor
 @CrossOrigin
 public class InstitutionController {
@@ -67,8 +67,8 @@ public class InstitutionController {
     }
 
     @DeleteMapping("supprime/{id}")
-    public ResponseEntity<String> delete(@PathVariable("id") int id){
-        return new ResponseEntity<String>(institutionService.supprimer(id), HttpStatus.OK);
+    public ResponseEntity<Institution> delete(@PathVariable("id") int id){
+        return new ResponseEntity<Institution>(institutionService.supprimer(id), HttpStatus.OK);
     }
 
 

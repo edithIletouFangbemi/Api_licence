@@ -2,6 +2,7 @@ package com.example.Api_version.request;
 
 import com.example.Api_version.entities.Agence;
 import com.example.Api_version.entities.Institution;
+import com.example.Api_version.entities.Module;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -22,10 +23,11 @@ import java.util.Date;
 public class LicenceReturnRequest2 {
     private Institution institution;
     private Agence agence;
-    private LocalDateTime dateCreation;
+    private Date dateCreation;
     private String codeLicence;
     private String key;
-    private String module;
+    private Module module;
     private int nbrLicenceServeur;
     private int statut;
+    private String typeLicence;
 }

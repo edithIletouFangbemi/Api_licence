@@ -18,7 +18,7 @@ import java.util.Map;
 public class Handler {
     @ExceptionHandler(InstitutionException.class)
     public ResponseEntity<?> InstitutionException(InstitutionException ex){
-        return new  ResponseEntity<String>(ex.getMessage(), ex.getTypeError());
+        return new  ResponseEntity<>(ex.getMessage(), ex.getTypeError());
     }
 
     @ExceptionHandler(ExceptionWithCode.class)
@@ -29,7 +29,7 @@ public class Handler {
 
     @ExceptionHandler(AgenceException.class)
     public ResponseEntity<?> AgenceException(AgenceException ex){
-        return ResponseEntity.badRequest().body(ex.getMessage());
+        return new ResponseEntity<>(ex.getMessage(), ex.getTypeErreur());
     }
 
     @ExceptionHandler(ProduitException.class)
@@ -49,14 +49,14 @@ public class Handler {
 
 
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
+   /* @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<String> handleValidationExceptions(MethodArgumentNotValidException ex) {
         String errorMessage = "Validation failed: ";
         errorMessage += ex.getBindingResult().getFieldErrors().stream()
                 .map(error -> error.getField() + " - " + error.getDefaultMessage())
                 .reduce("", (str1, str2) -> str1 + ", " + str2);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMessage);
-    }
+    } */
 
 
     @ExceptionHandler(BindException.class)

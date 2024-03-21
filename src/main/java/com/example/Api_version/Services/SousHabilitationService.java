@@ -21,7 +21,7 @@ public class SousHabilitationService {
     public SousHabilitation creer(SousHabilitationRequest request){
         Optional<Habilitation> habilitationOptional = habilitationRepository.findByCodeHabilitationAndStatut(request.getCodeHabilitation(), 1);
         var habilitation = new Habilitation();
-        habilitation = habilitationOptional.get();
+       habilitation = habilitationOptional.get();
        if(habilitationOptional.isEmpty()) throw new ProduitException("Aucune habilitation avec le code "+request.getCodeHabilitation());
 
         Optional<SousHabilitation> sousHabilitationOptional = sousHabilitationRepository.findByLibelleAndHabilitation(request.getLibelle(), habilitation);

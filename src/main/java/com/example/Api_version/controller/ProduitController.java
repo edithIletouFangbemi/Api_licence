@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("produits")
+@RequestMapping("/api_licence/produit")
 @RequiredArgsConstructor
 @CrossOrigin
 public class ProduitController {
@@ -28,9 +28,9 @@ public class ProduitController {
     public ResponseEntity<Produit> creer(@RequestBody ProduitRequest request){
         return new ResponseEntity<Produit>(produitService.creer(request), HttpStatus.CREATED);
     }
-    @GetMapping("/{code}")
-    public ResponseEntity<Produit> read(@PathVariable("code") String code){
-        return new ResponseEntity<Produit>(produitService.read(code), HttpStatus.OK);
+    @GetMapping("/{id}")
+    public ResponseEntity<Produit> read(@PathVariable("id") int id){
+        return new ResponseEntity<Produit>(produitService.read(id), HttpStatus.OK);
     }
     @GetMapping("/all")
     public ResponseEntity<List<Produit>> all(){
@@ -44,12 +44,12 @@ public class ProduitController {
     public ResponseEntity<List<Produit>> allDeleted(){
         return new ResponseEntity<List<Produit>>(produitService.allDeleted(), HttpStatus.OK);
     }
-    @PutMapping("/update/{code}")
-    public ResponseEntity<Produit> update(@PathVariable("code") String code, @RequestBody ProduitRequest produitRequest){
-        return new ResponseEntity<Produit>(produitService.update(code, produitRequest), HttpStatus.OK);
+    @PutMapping("/update/{id}")
+    public ResponseEntity<Produit> update(@PathVariable("id") int id, @RequestBody ProduitRequest produitRequest){
+        return new ResponseEntity<Produit>(produitService.update(id, produitRequest), HttpStatus.OK);
     }
-    @DeleteMapping("/supprimer/{code}")
-    public ResponseEntity<Produit> delete(@PathVariable("code") String code){
-        return new ResponseEntity<Produit>(produitService.delete(code), HttpStatus.OK);
+    @DeleteMapping("/supprimer/{id}")
+    public ResponseEntity<Produit> delete(@PathVariable("id") int id){
+        return new ResponseEntity<Produit>(produitService.delete(id), HttpStatus.OK);
     }
 }

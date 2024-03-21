@@ -1,23 +1,23 @@
 package com.example.Api_version.controller;
 
 import com.example.Api_version.Services.ContratService;
-import com.example.Api_version.entities.Contrat_Institution;
-import com.example.Api_version.entities.Institution;
-import com.example.Api_version.entities.Produit;
+import com.example.Api_version.entities.*;
 
+import com.example.Api_version.entities.Module;
 import com.example.Api_version.request.*;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-import com.example.Api_version.entities.Module;
 
+import java.util.Date;
 import java.util.List;
 
 @Controller
-@RequestMapping("/contrat/")
+@RequestMapping("/api_licence/contrat/")
 @CrossOrigin
 public class ContratController {
     private ContratService contratService;
@@ -82,5 +82,25 @@ public class ContratController {
     @GetMapping("produitPourContrat/{codeinst}")
     public ResponseEntity<List<Produit>> productsForNewContrat(@PathVariable("codeinst") String codeinst){
         return ResponseEntity.ok(contratService.productsByInst(codeinst));
+    }
+
+    @GetMapping("situationContrat")
+    public ResponseEntity<List<Contrat_Institution>> situationContrat(
+            @RequestParam(value = "institutionId", required = true) int institutionId,
+            @DateTimeFormat(pattern = "yyyy-MM-dd") @RequestParam(value = "dateDebut", required = true) Date dateDebut,
+            @DateTimeFormat(pattern = "yyyy-MM-dd") @RequestParam(value = "dateFin", required = true) Date dateFin,
+            @RequestParam(value = "typeContrat", required = true) String typeContrat,
+            @RequestParam(value = "statut", required = true) int statut
+    ){
+        return ResponseEntity.ok(contratService.situationContrat(institutionId, typeContrat, statut, dateDebut, dateFin));
+    }
+
+    @GetMapping("sousContratByIdContrat/{idContrat}")
+    public ResponseEntity<List<Sous_Contrat>> getAllSousContratByContratId(@PathVariable("idContrat") int idContrat){
+        return ResponseEntity.ok(contratService.getAllByContrat(idContrat));
+    }
+    @GetMapping("detailSousContrat/{idAgence}")
+    public ResponseEntity<List<DetailContrat>> getDetailContratByAgence(@PathVariable("idAgence") int idAgence){
+        return ResponseEntity.ok(contratService.getDetailContratByAgence(idAgence));
     }
 }

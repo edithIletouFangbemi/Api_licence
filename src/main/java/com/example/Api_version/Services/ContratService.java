@@ -2,13 +2,16 @@ package com.example.Api_version.Services;
 
 import com.example.Api_version.entities.*;
 import com.example.Api_version.entities.Module;
+import com.example.Api_version.exceptions.AgenceException;
 import com.example.Api_version.exceptions.ProduitException;
 import com.example.Api_version.repositories.*;
 import com.example.Api_version.request.*;
 import com.example.Api_version.utils.CodeGenerator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -24,8 +27,7 @@ public class ContratService {
     private final ContratRepository contratRepository;
     private final InstitutionRepository institutionRepository;
     private final ProduitRepository produitRepository;
-
-    private final ContratPrdouitRepository contratPrdouitRepository;
+    private final SousContratService sousContratService;
 
     private final InstitutionService institutionService;
     private final ContratPrdouitRepository contratProduitRepository;
@@ -155,13 +157,13 @@ public class ContratService {
         return institution;
     }
     */
-
+    @Transactional
     public Institution creerContrat(Contrat request){
-        Optional<Institution> institutionOptional = institutionRepository.findByCodeInst(request.getInstitution());
-        if(institutionOptional.isEmpty()) throw new ProduitException("aucune institution avec le code "+request.getInstitution());
+        Optional<Institution> institutionOptional = institutionRepository.findByIdAndStatut(request.getInstitution(),1);
+        if(institutionOptional.isEmpty()) throw new ProduitException("aucune institution avec l'identifiant "+request.getInstitution());
         institution = institutionOptional.get();
 
-        Optional<Produit> produitOptional = produitRepository.findByCodeProduit(request.getProduit());
+        /* Optional<Produit> produitOptional = produitRepository.findByCodeProduitIgnoreCase(request.getProduit());
         if(produitOptional.isEmpty() || produitOptional.get().getStatut() == 2)
             throw new ProduitException("aucun produit avec le code "+ request.getProduit());
 
@@ -170,18 +172,36 @@ public class ContratService {
         Optional<Contrat_Institution> contratInstitutionOptional = contratRepository.findByInstitutionAndProduit(institution,produit);
         if(contratInstitutionOptional.isPresent() && contratInstitutionOptional.get().getStatut() == 1 )
             throw new ProduitException("le Produit "+produit.getNom()+" est déjà actif pour " +institution.getNomInst()
-            );
+            );*/
 
 
         contrat = new Contrat_Institution();
-        contrat.setCodeContrat(CodeGenerator.codeContrat(institution.getNomInst(),request.getProduit()));
-        contrat.setLibelleContrat("Activation de "+produit.getNom()+" à "+institution.getNomInst());
+        if(request.getListSousContrat() != null){
+            contrat.setCodeContrat(request.getCodeContrat());
+        }
+        else{
+            contrat.setCodeContrat(CodeGenerator.codeContrat(institution.getNomInst(),request.getTypeContrat()));
+        }
+
+        contrat.setLibelleContrat(" signature de contrat à "+institution.getNomInst());
         contrat.setInstitution(institution);
-        contrat.setProduit(produit);
-        contrat.setDateDebut(request.getDateDebut());
-        contrat.setDateFin(request.getDateFin());
         contrat.setTypeContrat(request.getTypeContrat());
-        switch (contrat.getTypeContrat()){
+        contrat.setDateCreation(Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant()));
+        contrat.setDateDebut(request.getDateDebut());
+        if(request.getDateFin()!= null){
+            contrat.setDateFin(request.getDateFin());
+        }
+        if(request.getNbrAgence() >= 0){
+            contrat.setNbrAgence(request.getNbrAgence());
+        }
+        if(request.getNbrPosteTotal() >= 0){
+            contrat.setNbrPosteTotal(request.getNbrPosteTotal());
+        }
+      //  contrat.setProduit(produit);
+       // contrat.setDateDebut(request.getDateDebut());
+       // contrat.setDateFin(request.getDateFin());
+       // contrat.setTypeContrat(request.getTypeContrat());
+      /*  switch (contrat.getTypeContrat()){
             case "AgenceLimité_PosteLimité":{
                 contrat.setNbrAgence(request.getNbrAgence());
                 contrat.setNbrPosteTotal(0);
@@ -207,13 +227,19 @@ public class ContratService {
             default:{
                 throw new ProduitException("vous devez fournir le type de contrat");
             }
-        }
+        }*/
         contrat.setStatut(1);
         contrat =  contratRepository.save(contrat);
 
-        Produit finalProduit = produit;
+        request.getListSousContrat().forEach(sousContratRequest -> {
+            sousContratRequest.setIdContrat(contrat.getId());
+
+            sousContratService.create(sousContratRequest);
+        });
+
+        /*Produit finalProduit = produit;
         request.getContratUnits().forEach(contratUnit -> {
-            Optional<Module> moduleOptional = moduleRepository.findByCodeModuleAndProduitAndStatut(contratUnit.getModule(), finalProduit,1);
+            Optional<Module> moduleOptional = moduleRepository.findByCodeModuleIgnoreCaseAndProduitAndStatut(contratUnit.getModule(), finalProduit,1);
             if(moduleOptional.isEmpty()) throw new ProduitException("Aucun module de ce produit avec "+contratUnit.getModule());
 
             var module = new Module();
@@ -246,10 +272,10 @@ public class ContratService {
 
 
 
-        });
+        });*/
 
         var historique = new Historique();
-        historique.setAction("Activation du produit "+ produit.getNom()+" pour l'institution "+institution.getNomInst());
+        historique.setAction("Activation des produits pour l'institution "+institution.getNomInst());
         historique.setStatut(1);
         historique.setDateCreation(LocalDateTime.now());
         historique.setAuteur("");
@@ -258,6 +284,26 @@ public class ContratService {
 
         return institution;
     }
+
+    public List<Contrat_Institution> situationContrat(
+            int institutionId, String typeContrat, int statut, Date dateDebut, Date dateFin
+    ){
+        return contratRepository.situationContrat(institutionId, typeContrat, dateDebut, dateFin, statut);
+    }
+
+    public Contrat_Institution getContrat(int idContrat){
+        Optional<Contrat_Institution> optionalContratInstitution = contratRepository.findByIdAndStatut(idContrat,1);
+
+        if(optionalContratInstitution.isEmpty()) throw new AgenceException("Aucun contrat avec l'identifiant "+idContrat, HttpStatus.NOT_FOUND);
+
+        return optionalContratInstitution.get();
+    }
+    public List<Sous_Contrat> getAllByContrat(int idContrat){
+        Contrat_Institution contratInstitution = new Contrat_Institution();
+        contratInstitution = getContrat(idContrat);
+        return sousContratService.getAllByContrat(contratInstitution);
+    }
+
     public List<DetailContratInst> lister(){
         List<Object[]> results = contratRepository.listeReturn();
         List<DetailContratInst> details = new ArrayList<>();
@@ -295,17 +341,17 @@ public class ContratService {
         institution = institutionOptional.get();
         List<Agence> listeAgence = new ArrayList<>() ;
         List<Contrat_Institution> listeContrat = new ArrayList<>();
-        listeAgence = agenceService.ListeParInstitution(institutionCode);
+        listeAgence = agenceService.ListeParInstitution(institution.getId());
         listeContrat = contratRepository.findAllByInstitutionAndStatut(institution,1);
         if(listeContrat.isEmpty()) throw new ProduitException("aucun produit actif pour cette institution!!");
         if(listeAgence.isEmpty()) throw new ProduitException("liste d'agence vide!!");
         List<Contrat_Institution> finalListeContrat = listeContrat;
         listeAgence.forEach(agence->{
            finalListeContrat.forEach(contrat->{
-               if(contrat.getDateFin().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime().isBefore(now())) throw new ProduitException("le contrat de "+contrat.getProduit().getNom()
+               if(contrat.getDateFin().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime().isBefore(now())) throw new ProduitException("le contrat de "
                        +" a expiré"
                );
-               agenceService.activerProduit(contrat.getProduit().getCodeProduit(), agence.getCodeAgence());
+              // agenceService.activerProduit(contrat.getProduit().getCodeProduit(), agence.getCodeAgence());
            });
         });
 
@@ -367,7 +413,7 @@ public class ContratService {
     }
 */
     public List<Produit> productsByInst(String codeinst){
-        institution = institutionService.OneInstitution(codeinst);
+        institution = institutionService.OneInstitution(1);
         List<Contrat_Institution> contratList = contratRepository.findAllByInstitutionAndStatut(institution, 1);
         List<Produit> produitList = new ArrayList<>();
 
@@ -378,12 +424,12 @@ public class ContratService {
         }
         contratList.forEach(contrat->{
             produitRepository.findAllByStatut(1).forEach(produit->{
-                if(!produit.equals(contrat.getProduit())){
+              /*  if(!produit.equals(contrat.getProduit())){
                     if(!produitList.contains(produit)){
                         produitList.add(produit);
                     }
 
-                }
+                }*/
             });
         });
 
@@ -442,7 +488,7 @@ public class ContratService {
 
     public List<Produit> listeProduitParInstitution(String codeInstitution){
         listeProduit = new ArrayList<>();
-        institution = institutionService.OneInstitution(codeInstitution);
+        institution = institutionService.OneInstitution(1);
         if(institution== null) throw
              new ProduitException("cette institution n'existe pas!");
         List<Object[]> results = agenceRepository.products(institution.getCodeInst());
@@ -513,10 +559,10 @@ public class ContratService {
                 String codedetail = (String) result[0];
                 int statut = ((Number) result[5]).intValue();
                 String codeAg = (String) result[6];
-                Agence agence = agenceService.uneAgence(codeAg);
+             //   Agence agence = agenceService.uneAgence(codeAg);
 
                 detailContrat.setCodeDetailContrat(codedetail);
-                detailContrat.setAgence(agence);
+               // detailContrat.setAgence(agence);
                 detailContrat.setStatut(statut);
             }
         }
@@ -529,7 +575,7 @@ public class ContratService {
         if(institutionOptional.isEmpty())
             throw new ProduitException("Aucune institution avec le code "+codeInst);
         institution = institutionOptional.get();
-        Agence agence = agenceService.findAgence(institution, codeAgence);
+        Agence agence = agenceService.findAgence(institution, 1);
         if(agence == null) throw new ProduitException("Aucune agence de l'institution "+ institution.getNomInst()+" avec le code "+codeAgence);
 
         contrat = contratRepository.findByInstitutionAndStatut(institution,1).get();
@@ -554,7 +600,7 @@ public class ContratService {
         var agenceDetail = new AgenceDetail();
 
         agenceDetail.setCodecontrat(contrat.getCodeContrat());
-        agenceDetail.setTypeContrat(contrat.getTypeContrat());
+        //agenceDetail.setTypeContrat(contrat.getTypeContrat());
         agenceDetail.setNbrPosteTotal(contrat.getNbrPosteTotal());
         agenceDetail.setNbrAgence(contrat.getNbrAgence());
         produits.forEach(produit->{
@@ -616,6 +662,10 @@ public class ContratService {
         Instant instant = dateToConvert.toInstant();
         ZoneId zoneId = ZoneId.systemDefault();
         return instant.atZone(zoneId).toLocalDateTime();
+    }
+
+    public List<DetailContrat> getDetailContratByAgence(int idAgence){
+        return sousContratService.getAllByAgence(idAgence);
     }
 
 

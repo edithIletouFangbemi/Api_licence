@@ -11,6 +11,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 
@@ -33,7 +34,11 @@ public class User implements UserDetails {
     @ManyToOne
     private Profil profil;
     @JsonIgnoreProperties
+    private String motDePasse;
     private int statut;
+    private LocalDateTime dateCreation;
+    private LocalDateTime dateSuppression;
+    private LocalDateTime dateUpdated;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

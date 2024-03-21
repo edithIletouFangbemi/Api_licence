@@ -3,6 +3,7 @@ package com.example.Api_version.Services;
 import com.example.Api_version.config.AESCryptor;
 import com.example.Api_version.entities.*;
 import com.example.Api_version.entities.Module;
+import com.example.Api_version.exceptions.AgenceException;
 import com.example.Api_version.exceptions.ProduitException;
 import com.example.Api_version.report.FicheProduitEtat;
 import com.example.Api_version.repositories.*;
@@ -12,8 +13,11 @@ import lombok.RequiredArgsConstructor;
 import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
 import net.sf.dynamicreports.report.builder.DynamicReports;
 import net.sf.dynamicreports.report.builder.ParameterBuilder;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
 
 import static java.time.LocalDateTime.now;
@@ -29,34 +33,43 @@ public class LicenceServeurService {
     private final DetailContratRepository detailContratRepository;
     private final InstitutionService institutionService;
     private  final AgenceService agenceService;
+    private final Sous_ContratRepository sousContratRepository;
+    private final PosteRepository posteRepository;
+    private final ParametreService parametreService;
     private String returnKey = "#@£%&é'(-è_çà)='?./§!:;,<*µ¤+=}-";
     private Institution institution;
     private LicenceServeur licence;
     private Contrat_Institution contrat;
+    private Poste postenew;
     private List< LicenceReturnRequest2 > licences;
     private List<Institution> listeInstitution;
     private Agence agence;
 
 
     public List<LicenceReturnRequest2> creer(LicenceServeurRequest request) throws Exception {
+
         List<LicenceReturnRequest2> responses = new ArrayList<>();
         institution = institutionService.OneInstitution(request.getInstitutionCode());
-        if(institution == null) throw new ProduitException("aucune institution avec le code "+request.getInstitutionCode());
-        Optional<Produit> produitOptional = produitRepository.findByCodeProduitAndStatut(request.getProduit(), 1);
+        if(institution == null) throw new ProduitException("aucune institution avec l'identifiant "+request.getInstitutionCode());
+        Optional<Produit> produitOptional = produitRepository.findByIdAndStatut(request.getProduit(), 1);
         if(produitOptional.isEmpty()) throw new ProduitException("Aucun produit avec ces informations...");
         var produit = new Produit();
         produit = produitOptional.get();
-        Optional<Contrat_Institution> contratInstitutionOptional = contratRepository.findByInstitutionAndProduitAndStatut(institution,produit,1);
-        if(contratInstitutionOptional.isEmpty()) throw new ProduitException("ce produit n'est pas actif pour l'institution "+ institution.getNomInst());
+       // Optional<Contrat_Institution> contratInstitutionOptional = contratRepository.findByInstitutionAndProduitAndStatut(institution,produit,1);
+        Optional<Contrat_Institution> contratInstitutionOptional = contratRepository.findByInstitutionAndStatut(institution,1);
+        if(contratInstitutionOptional.isEmpty()) throw new ProduitException(institution.getNomInst()+" n'a aucun contrat en cours!! ");
         contrat = contratInstitutionOptional.get();
+        Sous_Contrat sousContrat = sousContratRepository.findByContratAndProduitAndStatut(contrat,produit,1).get();
+        if(sousContrat == null) throw new AgenceException("le produit "+produit.getNom()+" ne fait pas partie du contrat de "+institution.getNomInst(), HttpStatus.NOT_FOUND);
+
         agence = agenceService.findAgence(institution, request.getAgenceCode());
         if(agence == null) throw new ProduitException("L'institution "+institution.getNomInst()+
                 " n'a aucune agence avec le code "+request.getAgenceCode());
 
             Produit finalProduit = produit;
-                request.getModules().forEach(codeModule->{
-            Optional<Module> moduleOptional = moduleRepository.findByCodeModuleAndProduitAndStatut(codeModule, finalProduit,1);
-            if(moduleOptional.isEmpty()) throw new ProduitException("le produit "+finalProduit.getNom() +" n'a aucun module avec le code "+ codeModule);
+                request.getModules().forEach(idModule->{
+            Optional<Module> moduleOptional = moduleRepository.findByIdAndProduitAndStatut(idModule, finalProduit,1);
+            if(moduleOptional.isEmpty()) throw new ProduitException("le produit "+finalProduit.getNom() +" n'a aucun module avec l'identifiant "+ idModule);
             var module = new Module();
             module = moduleOptional.get();
 
@@ -64,32 +77,134 @@ public class LicenceServeurService {
             Optional<DetailContrat> detailContratOptional = detailContratRepository.findByAgenceAndModuleAndStatut(agence, module,1);
             if(detailContratOptional.isEmpty()) throw new ProduitException("le module "+ module.getLibelleModule()+" n'est pas actif pour l'agence "+agence.getNom());
             detail = detailContratOptional.get();
-            if(detail.getTypeContratModule().equals("limite")) throw new ProduitException("ce module est activé en illimité il est donc impossible de lui générer une licence serveur");
+
+            if(detail.getTypeContratModule().equals("limite")) throw new ProduitException("ce module est activé en limité il est donc impossible de lui générer une licence agence");
             Optional<LicenceServeur> licenceServeurOptional = licenceServeurRepository.findByAgenceAndModuleAndStatut(agence, module,1);
-            if(licenceServeurOptional.isPresent()) throw new ProduitException("cette agence a deja une licence serveur pour le module "+module.getCodeModule());
+            if(licenceServeurOptional.isPresent()) throw new ProduitException("cette agence a deja une licence agence pour le module "+module.getLibelleModule());
+
+                    Optional<Poste> posteOptional = posteRepository.findByAdresseIpAndAdresseMacAndIdMachineAndIdDisque(
+                            request.getAdresseIp(),
+                            request.getAdresseMac(),
+                            request.getIdMachine(),
+                            request.getIdDisqueDur()
+                    );
+
+                    if(posteOptional.isPresent()) {
+
+                            Optional<LicenceServeur> licenceOptional = licenceServeurRepository.findByPosteAndModuleAndAgenceAndStatut(posteOptional.get(), module,agence,1);
+
+                            if(licenceOptional.isPresent()) {
+
+                                throw new ProduitException("Un poste a deja une licence agence pour le module"+module.getLibelleModule()+" veuillez changer de poste pour le module");
+                            }
+
+                          postenew = posteOptional.get();
+
+                    }
+
+                    Parametre param = parametreService.getParamCheckingWithDate(Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant()));
+                    if(param == null) throw new ProduitException("Aucun parametre en cours pour générer la licence agence!");
+                    String[] parametres = param.getDescription().split(",");
+                    Poste poste = new Poste();
+
+                    if(postenew == null){
+                        poste.setCodePoste(CodeGenerator.codeDetailContrat(request.getIdDisqueDur(), request.getIdMachine()));
+                        poste.setAgence(agence);
+                        poste.setAdresseIp(request.getAdresseIp());
+                        poste.setAdresseMac(request.getAdresseMac());
+                        poste.setIdDisque(request.getIdDisqueDur());
+                        poste.setIdMachine(request.getIdMachine());
+                        poste.setDateCreation(now());
+                        poste.setStatut(1);
+
+                        poste = posteRepository.save(poste);
+                    }
+                    else{
+                        poste = postenew;
+                    }
+
+                    StringBuilder value = new StringBuilder();
+                    StringBuilder key = new StringBuilder();
+                    StringBuilder keyReturn = new StringBuilder();
+
+                    int startIndex;
+                    for(String parm : parametres){
+                        if("adresseIp".equals(parm)){
+                            startIndex = poste.getAdresseIp().length() - 6;
+                            if(startIndex >=0){
+                                value.append(poste.getAdresseIp()+"##");
+                                key.append(poste.getAdresseIp().substring(startIndex, poste.getAdresseIp().length()));
+                                keyReturn.append("Ip");
+                            }
+                            else {
+                                throw new ProduitException("l'adresse Ip doit depasser 6 caractères!");
+                            }
+
+                        }
+                        if("adresseMac".equals(parm)){
+                            startIndex = poste.getAdresseMac().length() - 6;
+                            if(startIndex >=0){
+                                value.append(poste.getAdresseMac()+"##");
+                                key.append(poste.getAdresseMac().substring(startIndex, poste.getAdresseMac().length()));
+                                keyReturn.append("Mac");
+                            }
+                            else {
+                                throw new ProduitException("l'adresse Mac doit depasser 6 caractères!");
+                            }
+                        }
+                        if("idMachine".equals(parm)){
+                            startIndex = poste.getIdMachine().length() - 5;
+
+                            if(startIndex>=0){
+                                value.append(poste.getIdMachine()+"##");
+                                key.append(poste.getIdMachine().substring(startIndex, poste.getIdMachine().length()));
+                                keyReturn.append("IdMachine");
+                            }
+                            else {
+                                throw new ProduitException("l'identifiant de la  machine doit depasser 5 caractères!");
+                            }
+                        }
+                        if("idDisqueDur".equals(parm)){
+                            startIndex = poste.getIdDisque().length() - 5;
+                            value.append(poste.getIdDisque()+"##");
+                            if(startIndex>=0){
+                                value.append(poste.getIdDisque());
+                                key.append(poste.getIdDisque().substring(startIndex, poste.getIdDisque().length()));
+                                keyReturn.append("IdDisqueDur");
+                            }
+                            else {
+                                throw new ProduitException("l'identifiant du disque dur doit depasser 6 caractères!");
+                            }
+
+                        }
+                    }
+
 
                     licence = new LicenceServeur();
 
                     licence.setCode(CodeGenerator.codeLicenceserveur(
-                            request.getAgenceCode(), codeModule));
-                    String key = CodeGenerator.keyBuilder(request.getAgenceCode(), codeModule);
-                    String data = (codeModule+ request.getAgenceCode()).toString();
+                            agence.getCodeAgence(), module.getCodeModule()));
+                    String data = agence.getCodeAgence()+"#&"+module.getCodeModule()+"#&"+value.toString()+"&agence";
                     licence.setAgence(agence);
                     licence.setModule(module);
-                    licence.setDateCreation(now());
-                    licence.setKey(key);
+                    licence.setPoste(poste);
+                    licence.setDateCreation(Date.from(LocalDateTime.now().atZone(ZoneId.systemDefault()).toInstant()));
+                    licence.setParametre(param);
+                    licence.setKeyLicenceServeur(key.toString()+"azqswxcder");
                     licence.setStatut(1);
                     try {
-                        licence.setLibelle(AESCryptor.encrypt(data, key));
+                        licence.setLibelle(AESCryptor.encrypt(data, key.toString()+"azqswxcder"));
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                     licence = licenceServeurRepository.save(licence);
 
                     var response = LicenceReturnRequest2.builder()
-                            .codeLicence(licence.getCode())
+                            .codeLicence(licence.getLibelle())
                             .agence(agence)
-                            .module(module.getLibelleModule())
+                            .module(module)
+                            .dateCreation(licence.getDateCreation())
+                            .typeLicence("agence")
                             .statut(licence.getStatut())
                             .institution(institution)
                             .build();
@@ -100,9 +215,6 @@ public class LicenceServeurService {
 
        // Optional<LicenceServeur> licenceServeurOptional = licenceServeurRepository.findByAgenceAndStatut(agence,1);
        // if(licenceServeurOptional.isPresent()) throw new ProduitException("cette agence a deja une licence serveur");
-
-
-
 
         return responses;
     }
@@ -143,26 +255,20 @@ public class LicenceServeurService {
         return licences;
     }
 
-    public DownloadRequest telecharger(String codelicence) throws Exception {
-        Object[] result = licenceServeurRepository.codeForDownload(codelicence);
-
-        String code = (String) result[0];
-        String key = (String) result[1];
-        String agence = (String) result[2];
-        String institution = (String) result[3];
-        String module = (String) result[4];
+   /* public DownloadRequest telecharger(int idLicence) throws Exception {
+        LicenceServeur licenceServeur = licenceServeurRepository.findByIdAndStatut(idLicence,1);
 
         var response = new DownloadRequest();
 
-        response.setCodelicence(AESCryptor.encrypt(code, returnKey));
-        response.setKey(AESCryptor.encrypt(key, returnKey));
-        response.setCodemodule(AESCryptor.encrypt(module, returnKey));
-        response.setCodeAgence(AESCryptor.encrypt(agence, returnKey));
-        response.setCodeinst(AESCryptor.encrypt(institution, returnKey));
+        response.setCodelicence(AESCryptor.encrypt(licenceServeur.getCode(), returnKey));
+        response.setKey(AESCryptor.encrypt(licenceServeur.getKeyLicenceServeur(), returnKey));
+        response.setCodemodule(AESCryptor.encrypt(licenceServeur.getModule().getCodeModule(), returnKey));
+        response.setCodeAgence(AESCryptor.encrypt(licenceServeur.getAgence().getCodeAgence(), returnKey));
+        response.setCodeinst(AESCryptor.encrypt(licenceServeur.getAgence().getInstitution().getCodeInst(), returnKey));
 
         return response;
 
-    }
+    }*/
 
     public List<LicenceReturnRequest2> licenceByInst(String codeinst){
         licences = new ArrayList<>();
@@ -190,7 +296,7 @@ public class LicenceServeurService {
             licenceReturn.setAgence(agence);
             licenceReturn.setInstitution(inst);
             licenceReturn.setStatut(statut);
-            licenceReturn.setModule(module);
+            //licenceReturn.setModule(module);
             licenceReturn.setDateCreation(licenceReturn.getDateCreation());
             licences.add(licenceReturn);
         }
@@ -265,7 +371,7 @@ public class LicenceServeurService {
            }
         });
         results.forEach(code->{
-            institution = institutionService.OneInstitution(code);
+            institution = institutionService.OneInstitution(1);
             institutions.add(institution);
         });
 
@@ -330,6 +436,38 @@ public class LicenceServeurService {
         licenceServeurRepository.save(licence);
 
         return "dactivée avec succès!!";
+    }
+
+    public LicenceReturnRequest activerLicence(int idLicence){
+        Optional<LicenceServeur> licenceOptional = licenceServeurRepository.findByIdAndStatut(idLicence, 2);
+
+        if(licenceOptional.isEmpty()) throw new AgenceException("Aucune licence avec l'idendtifiant "+idLicence+" n'a été désactivée", HttpStatus.NOT_FOUND);
+
+        licence = licenceOptional.get();
+        licence.setStatut(1);
+        licence = licenceServeurRepository.save(licence);
+        LicenceReturnRequest newRequestReturn = new LicenceReturnRequest();
+        newRequestReturn.setAgence(licence.getPoste().getAgence().getNom());
+        newRequestReturn.setModule(licence.getModule().getLibelleModule());
+        newRequestReturn.setInstitution(licence.getPoste().getAgence().getInstitution().getNomInst());
+
+        return newRequestReturn;
+    }
+
+    public LicenceReturnRequest desactiverLicence(int idLicence){
+        Optional<LicenceServeur> licenceOptional = licenceServeurRepository.findByIdAndStatut(idLicence, 1);
+
+        if(licenceOptional.isEmpty()) throw new AgenceException("Aucune licence avec l'idendtifiant "+idLicence+" n'est active", HttpStatus.NOT_FOUND);
+
+        licence = licenceOptional.get();
+        licence.setStatut(2);
+        licence = licenceServeurRepository.save(licence);
+        LicenceReturnRequest newRequestReturn = new LicenceReturnRequest();
+        newRequestReturn.setAgence(licence.getPoste().getAgence().getNom());
+        newRequestReturn.setModule(licence.getModule().getLibelleModule());
+        newRequestReturn.setInstitution(licence.getPoste().getAgence().getInstitution().getNomInst());
+
+        return newRequestReturn;
     }
 
     public JasperReportBuilder doJasper(TestRequest request)  {
@@ -400,6 +538,9 @@ public class LicenceServeurService {
 
         return mesParameters;
     }
+
+
+
 
 
 }

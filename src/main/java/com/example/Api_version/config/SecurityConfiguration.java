@@ -36,7 +36,31 @@ public class SecurityConfiguration {
                         (request)
                                 -> {
                             try {
-                                request.requestMatchers("/utilisateur/authentication", "/utilisateur/changer" , "/utilisateur/forgot")
+                                request.requestMatchers("/utilisateur/authentication", "/utilisateur/changer" , "/utilisateur/forgot",
+                                        "/api_licence/institution/**",
+                                        "/api_licence/agence/**",
+                                        "/api_licence/produit/**",
+                                        "/api_licence/module/**",
+                                        "/api_licence/parametre/**",
+                                        "/api_licence/parametre-vie/**",
+                                        "/api_licence/contrat/**",
+                                        "/api_licence/licence/**",
+                                        "/api_licence/licenceServeur/**",
+                                        "/api_licence/habilitation/**",
+                                        "/api_licence/profil/**",
+                                        "/api_licence/soushabilitation/**",
+
+                                        "/v2/api-docs",
+                                        "/v3/api-docs",
+                                        "/v3/api-docs/**",
+                                        "/swagger-resources",
+                                        "/swagger-resources/**",
+                                        "/configuration/ui",
+                                        "/configuration/security",
+                                        "/swagger-ui/**",
+                                        "/webjars/**",
+                                        "/swagger-ui.html"
+                                        )
                                         .permitAll()
                                         .anyRequest()
                                         .authenticated()

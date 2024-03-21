@@ -47,7 +47,7 @@ public class InstitutionService {
      */
     @Transactional
     public Institution creer(InstitutionRequest request){
-        Optional<Institution> institutionOptional = institutionRepository.findByNomInstIgnoreCase(request.getNomInst());
+        Optional<Institution> institutionOptional = institutionRepository.findByNomInstIgnoreCaseAndStatut(request.getNomInst(), 1);
         Optional<Institution> optionalInstitutionByCode = institutionRepository.findByCodeInstAndStatut(request.getCodeInst(), 1);
 
         if(optionalInstitutionByCode.isPresent()) throw new InstitutionException("une institution existe deja avec le code "+request.getCodeInst(), HttpStatus.CONFLICT);
@@ -75,7 +75,7 @@ public class InstitutionService {
         historique.setAction("Création de l'institution "+institution.getNomInst());
         historique.setStatut(1);
         historique.setDateCreation(LocalDateTime.now());
-        historique.setAuteur(authenticationService.getCurrentUsername().getName());
+        historique.setAuteur(authenticationService.getCurrentUsername());
 
         historyRepository.save(historique);
         return institutionRepository.save(institution);
@@ -95,7 +95,7 @@ public class InstitutionService {
 
             Institution inst = institutionOptional.get();
             var valeur = inst.getNomInst();
-            inst.setCodeInst(inst.getCodeInst());
+            inst.setCodeInst(institution.getCodeInst());
             inst.setNomInst(institution.getNomInst());
             inst.setAdresseInst(institution.getAdresseInst());
             inst.setTypeArchitecture(institution.getTypeArchitecture());
@@ -104,11 +104,10 @@ public class InstitutionService {
         historique.setAction("Modification de l'institution "+valeur + " en "+inst.getNomInst());
         historique.setStatut(1);
         historique.setDateCreation(LocalDateTime.now());
-        historique.setAuteur(authenticationService.getCurrentUsername().getName());
+        historique.setAuteur(authenticationService.getCurrentUsername());
 
         historyRepository.save(historique);
             return institutionRepository.save(inst);
-
     }
 
     /**
@@ -143,7 +142,7 @@ public class InstitutionService {
             historique.setAction("Consulter la liste des institutions ");
             historique.setStatut(1);
             historique.setDateCreation(LocalDateTime.now());
-            historique.setAuteur(authenticationService.getCurrentUsername().getName());
+            historique.setAuteur(authenticationService.getCurrentUsername());
 
             historyRepository.save(historique);
 
@@ -188,7 +187,7 @@ public class InstitutionService {
         historique.setAction("Consulter l'institution "+inst.getNomInst());
         historique.setStatut(1);
         historique.setDateCreation(LocalDateTime.now());
-        historique.setAuteur(authenticationService.getCurrentUsername().getName());
+        historique.setAuteur(authenticationService.getCurrentUsername());
 
         historyRepository.save(historique);
         return inst;
@@ -200,7 +199,7 @@ public class InstitutionService {
      * @return
      */
     @Transactional
-    public String supprimer(int code){
+    public Institution supprimer(int code){
         Optional<Institution> institutionOptional = institutionRepository.findById(code);
         Institution inst = institutionOptional.get();
         if(institutionOptional.isEmpty() || inst.getStatut() == 2) throw new InstitutionException("aucune institution avec l'identifiant "+ code,HttpStatus.NOT_FOUND);
@@ -209,10 +208,10 @@ public class InstitutionService {
         historique.setAction("Suppression de "+inst.getNomInst());
         historique.setStatut(1);
         historique.setDateCreation(LocalDateTime.now());
-        historique.setAuteur(authenticationService.getCurrentUsername().getName());
+        historique.setAuteur(authenticationService.getCurrentUsername());
 
         historyRepository.save(historique);
-        return inst.getNomInst()+" a été supprimée avec succès!";
+        return institutionRepository.save(inst);
     }
 
     /**

@@ -12,7 +12,7 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("parametre-vie/")
+@RequestMapping("/api_licence/parametre-vie/")
 @CrossOrigin
 public class ParametreDeVieController {
     private final ParametreDevieService parametreDevieService;
@@ -26,7 +26,7 @@ public class ParametreDeVieController {
     }
     @GetMapping("all")
     public ResponseEntity<List<ParametreDeVieLicence>> all(){
-        return ResponseEntity.ok(parametreDevieService.findAll());
+        return ResponseEntity.ok(parametreDevieService.getAll());
     }
     @PutMapping("update/{id}")
     public ResponseEntity<ParametreDeVieLicence> update(@PathVariable("id") int id, @RequestBody ParametreDeVieRequest request){

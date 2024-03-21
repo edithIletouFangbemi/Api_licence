@@ -7,17 +7,20 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface LicenceRepository extends JpaRepository<Licence, String> {
+public interface LicenceRepository extends JpaRepository<Licence, Integer> {
     @Query(value = "select i.* from institution i JOIN agence a ON i.codeinst = a.institution_codeinst JOIN contrat_institution c On a.institution_codeinst = c.institution_codeinst\n" +
             "  WHERE i.statut = 1 AND a.statut = 1 AND c.statut = 1 AND  \n" +
             " a.codeagence in (select DISTINCT agence_codeagence from detailcontrat where statut = 1)\n" +
             " GROUP BY i.codeinst\n" +
             " ;", nativeQuery = true)
     List<Object[]> listeInstitution();
+
+    Optional<Licence> findByIdAndStatut(int id, int statut);
     @Query(value = "select DISTINCT a.* from agence a JOIN institution i ON a.institution_codeinst = i.codeinst \n" +
             "                                     JOIN contrat_institution c ON i.codeinst = c.institution_codeinst\n" +
             " JOIN produit p ON c.produit_codeproduit = p.codeproduit\n" +
@@ -74,7 +77,7 @@ public interface LicenceRepository extends JpaRepository<Licence, String> {
             " group by pt.codeposte", nativeQuery = true)
     List<Object[]> countLicenceByModuleByAgence(@Param("codeinst") String codeinst, @Param("codemodule") String codemodule,@Param("codeagence") String codeagence);
 
-    Optional<Licence> findByPosteAndModule(Poste poste, Module module );
+    Optional<Licence> findByPosteAndModuleAndStatut(Poste poste, Module module , int statut);
 
     @Query(value = "select i.codeinst, i.nominst, a.codeagence, a.nom, i.typearchitecture, COUNT( DISTINCT pt.codeposte) nbrPoste\n" +
             "from poste pt JOIN agence a ON pt.agence_codeagence = a.codeagence\n" +
@@ -113,6 +116,16 @@ public interface LicenceRepository extends JpaRepository<Licence, String> {
     List<Licence> findAllByPoste(Poste poste);
     @Query(value="select l.libelle, l.module_codemodule, l.poste_codeposte, l.key from licence l where l.codelicence = :codelicence",nativeQuery = true)
     List<Object[]> getLicence(@Param("codelicence") String codelicence);
+    @Query(" select l from Licence l " +
+            " where l.statut = 1 AND :idLicence = l.id ")
+    Licence downloadLicence(@Param("idLicence") int idLicence);
 
+    @Query("select l.id, l.poste.agence.nom, l.poste.idMachine, l.module.libelleModule, l.dateCreation, l.statut from Licence l " +
+            " where l.statut = :statut AND l.dateCreation BETWEEN :dateDebut AND :dateFin " +
+            " AND l.poste.agence.id = :agenceId AND l.poste.id IN :posteIds AND l.module.id IN :moduleIds ")
+    List<Object[]> situationLicence(@Param("agenceId") int agenceId, @Param("posteIds") List<Integer> posteIds, @Param("moduleIds") List<Integer> moduleIds
+            , @Param("dateDebut") Date dateDebut, @Param("dateFin") Date dateFin , @Param("statut") int statut);
 
+    @Query(" select l from Licence l where l.statut = :statut AND l.id IN :listeIdLicence")
+    List<Licence> findAllByIdAndStatut(@Param("listeIdLicence") List<Integer> listeIdLicence, @Param("statut") int statut);
 }

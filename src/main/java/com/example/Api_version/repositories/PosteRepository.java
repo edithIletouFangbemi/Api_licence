@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface PosteRepository extends JpaRepository<Poste,String> {
+public interface PosteRepository extends JpaRepository<Poste,Integer> {
     Optional<Poste> findByAdresseIpAndAdresseMacAndIdMachineAndIdDisque(
             String adresseIp,
             String adresseMac,

@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("module/")
+@RequestMapping("/api_licence/module/")
 @CrossOrigin
 public class ModuleController {
     private ModuleService moduleService;
@@ -22,9 +22,9 @@ public class ModuleController {
     public ResponseEntity<Module> creer(@RequestBody ModuleRequest request){
         return new ResponseEntity<Module>(moduleService.creer(request), HttpStatus.CREATED);
     }
-    @GetMapping("{code}")
-    public ResponseEntity<Module> read(@PathVariable("code") String code){
-        return new ResponseEntity<Module>(moduleService.read(code), HttpStatus.OK);
+    @GetMapping("{id}")
+    public ResponseEntity<Module> read(@PathVariable("id") int id){
+        return new ResponseEntity<Module>(moduleService.read(id), HttpStatus.OK);
     }
     @GetMapping("all")
     public ResponseEntity<List<Module>> all(){
@@ -34,16 +34,16 @@ public class ModuleController {
     public ResponseEntity<List<Module>> allDeleted(){
         return new ResponseEntity<List<Module>>(moduleService.allDeleted(), HttpStatus.OK);
     }
-    @PutMapping("update/{code}")
-    public ResponseEntity<Module> update(@PathVariable("code") String code,@RequestBody ModuleRequest request){
-        return new ResponseEntity<Module>( moduleService.update(code,request), HttpStatus.OK);
+    @PutMapping("update/{id}")
+    public ResponseEntity<Module> update(@PathVariable("id") int id,@RequestBody ModuleRequest request){
+        return new ResponseEntity<Module>( moduleService.update(id,request), HttpStatus.OK);
     }
-    @DeleteMapping("supprimer/{code}")
-    public ResponseEntity<Module> delete(@PathVariable("code") String code){
-        return new ResponseEntity<Module>(moduleService.delete(code), HttpStatus.OK);
+    @DeleteMapping("supprimer/{id}")
+    public ResponseEntity<Module> delete(@PathVariable("id") int id){
+        return new ResponseEntity<Module>(moduleService.delete(id), HttpStatus.OK);
     }
-    @GetMapping("module_by_produit/{code}")
-    public ResponseEntity<List<Module>> moduleByProduit(@PathVariable("code") String code){
-        return new ResponseEntity<List<Module>>(moduleService.moduleByProduit(code), HttpStatus.OK);
+    @GetMapping("module_by_produit/{id}")
+    public ResponseEntity<List<Module>> moduleByProduit(@PathVariable("id") int id){
+        return new ResponseEntity<List<Module>>(moduleService.moduleByProduit(id), HttpStatus.OK);
     }
 }

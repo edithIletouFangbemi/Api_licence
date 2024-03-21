@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("agence/")
+@RequestMapping("/api_licence/agence/")
 @CrossOrigin
 public class AgenceController {
     private AgenceService agenceService;
@@ -24,11 +24,11 @@ public class AgenceController {
     }
     @PostMapping("creer")
     public ResponseEntity<Agence> creer(@RequestBody AgenceRequest request){
-        return new ResponseEntity<Agence>(agenceService.creer(request), HttpStatus.ACCEPTED);
+        return new ResponseEntity<Agence>(agenceService.creer(request), HttpStatus.CREATED);
     }
-    @GetMapping("getOne/{code}")
-    public ResponseEntity<Agence> getOne(@PathVariable("code") String code){
-        return new ResponseEntity<Agence>( agenceService.uneAgence(code), HttpStatus.OK);
+    @GetMapping("getOne/{id}")
+    public ResponseEntity<Agence> getOne(@PathVariable("id") int id){
+        return new ResponseEntity<Agence>( agenceService.uneAgence(id), HttpStatus.OK);
     }
     @GetMapping
     public ResponseEntity<List<Agence>>all(){
@@ -39,17 +39,17 @@ public class AgenceController {
     public ResponseEntity<List<Agence>> allDeleted(){
         return new ResponseEntity<List<Agence>>(agenceService.ListeDeleted(),HttpStatus.OK);
     }
-    @PutMapping("update/{code}")
-    public ResponseEntity<Agence> update(@PathVariable("code") String code,@RequestBody AgenceRequest request){
-        return new ResponseEntity<Agence>(agenceService.update(code,request), HttpStatus.OK);
+    @PutMapping("update/{id}")
+    public ResponseEntity<Agence> update(@PathVariable("id") int id,@RequestBody AgenceRequest request){
+        return new ResponseEntity<Agence>(agenceService.update(id,request), HttpStatus.OK);
     }
-    @DeleteMapping("delete/{code}")
-    public ResponseEntity<String> delete(@PathVariable("code") String code){
-        return new ResponseEntity<String>( agenceService.supprimer(code), HttpStatus.OK);
+    @DeleteMapping("delete/{id}")
+    public ResponseEntity<String> delete(@PathVariable("id") int id){
+        return new ResponseEntity<String>( agenceService.supprimer(id), HttpStatus.OK);
     }
-    @GetMapping("agenceByInstitution/{code}")
-    public ResponseEntity<List<Agence>> allAgence(@PathVariable("code") String code){
-        return new ResponseEntity<List<Agence>>(agenceService.ListeParInstitution(code), HttpStatus.OK);
+    @GetMapping("agenceByInstitution/{idInstitution}")
+    public ResponseEntity<List<Agence>> allAgence(@PathVariable("idInstitution") int idInstitution){
+        return new ResponseEntity<List<Agence>>(agenceService.ListeParInstitution(idInstitution), HttpStatus.OK);
     }
     @GetMapping("modules/{codeagence}/{codeproduit}")
     public ResponseEntity<List<Module>> modules(@PathVariable("codeagence") String codeagence, @PathVariable("codeproduit") String codeproduit){

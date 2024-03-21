@@ -1,11 +1,13 @@
 package com.example.Api_version.Services;
 
 import com.example.Api_version.entities.ParametreDeVieLicence;
+import com.example.Api_version.exceptions.AgenceException;
 import com.example.Api_version.exceptions.ProduitException;
 import com.example.Api_version.repositories.ParametreDeVieRepository;
 import com.example.Api_version.request.ParametreDeVieRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -22,7 +24,7 @@ public class ParametreDevieService {
     public ParametreDeVieLicence creer(ParametreDeVieRequest request){
         Optional<ParametreDeVieLicence> parametreDeVieLicenceOptional = parametreDeVieRepository.findByStatutAndTypeLicence(1, request.getTypeLicence());
 
-        if(parametreDeVieLicenceOptional.isPresent()) throw new ProduitException("Un parametre est actif actuellement desactiver le d'abord !!");
+        if(parametreDeVieLicenceOptional.isPresent()) throw new AgenceException("Un parametre est actif actuellement desactiver le d'abord !!", HttpStatus.ALREADY_REPORTED);
 
         var parametre = new ParametreDeVieLicence();
 
@@ -37,7 +39,7 @@ public class ParametreDevieService {
 
     public ParametreDeVieLicence read(int id){
         Optional<ParametreDeVieLicence> parametreDeVieLicenceOptional = parametreDeVieRepository.findByIdAndStatut(id, 1);
-        if(parametreDeVieLicenceOptional.isEmpty()) throw new ProduitException("aucun parametre avec l'identifiant "+ id);
+        if(parametreDeVieLicenceOptional.isEmpty()) throw new AgenceException("aucun parametre avec l'identifiant "+ id, HttpStatus.NOT_FOUND);
         return parametreDeVieLicenceOptional.get();
     }
 
@@ -53,7 +55,7 @@ public class ParametreDevieService {
         return parametreDeVieRepository.save(parametre);
     }
 
-    public List<ParametreDeVieLicence> findAll(){
+    public List<ParametreDeVieLicence> getAll(){
         Sort sortByAttributAsc = Sort.by(Sort.Direction.ASC, "statut");
 
         /*
@@ -69,7 +71,7 @@ public class ParametreDevieService {
 
     public ParametreDeVieLicence désactiver(int id){
         Optional<ParametreDeVieLicence> parametreDeVieLicenceOptional = parametreDeVieRepository.findByIdAndStatut(id, 1);
-        if(parametreDeVieLicenceOptional.isEmpty()) throw new ProduitException("aucun parametre avec l'identifiant "+ id);
+        if(parametreDeVieLicenceOptional.isEmpty()) throw new AgenceException("aucun parametre avec l'identifiant "+ id,HttpStatus.NOT_FOUND);
         var parametre = new ParametreDeVieLicence();
         parametre = parametreDeVieLicenceOptional.get();
         parametre.setDateFin(now());

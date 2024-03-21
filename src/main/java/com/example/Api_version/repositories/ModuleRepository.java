@@ -11,11 +11,14 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface ModuleRepository extends JpaRepository<Module, String> {
-    Optional<Module> findByCodeModuleAndStatut(String code, int statut);
-    Optional<Module> findByLibelleModuleAndProduit(String libelleModule, Produit produit);
-    Optional<Module> findByCodeModuleAndProduitAndStatut(String code, Produit produit, int statut);
+public interface ModuleRepository extends JpaRepository<Module, Integer> {
+    Optional<Module> findByCodeModuleIgnoreCaseAndStatut(String code, int statut);
+    Optional<Module> findByLibelleModuleIgnoreCaseAndProduitAndStatut(String libelleModule, Produit produit, int statut);
+    Optional<Module> findByLibelleModuleIgnoreCaseAndProduit(String libelleModule, Produit produit);
+    Optional<Module> findByCodeModuleIgnoreCaseAndProduitAndStatut(String code, Produit produit, int statut);
+    Optional<Module> findByIdAndStatut(int id, int statut);
     List<Module> findAllByStatut(int statut);
+    Optional<Module> findByIdAndProduitAndStatut(int id, Produit produit, int statut);
 
     Optional<Module> findByProduitAndTypeModuleAndStatut(Produit produit,String typeModule, int statut);
     @Query(value = "SELECT m.* " +

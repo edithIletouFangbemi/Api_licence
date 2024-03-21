@@ -1,8 +1,6 @@
 package com.example.Api_version.entities;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -14,6 +12,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class Agence {
     @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private int id;
     private String codeAgence;
     private String nom;
     private String description;

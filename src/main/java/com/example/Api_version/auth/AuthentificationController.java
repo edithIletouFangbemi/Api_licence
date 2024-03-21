@@ -4,8 +4,13 @@ import com.example.Api_version.Services.AuthenticationService;
 import com.example.Api_version.entities.User;
 import com.example.Api_version.event.RegistrationCompletePublisherEvent;
 import com.example.Api_version.request.*;
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.mail.MessagingException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
@@ -20,7 +25,10 @@ import java.util.List;
 @RestController
 @RequestMapping("utilisateur")
 @RequiredArgsConstructor
-@CrossOrigin
+@CrossOrigin("*")
+@Tag(name = "Gestion des utilisateurs")
+//hide a controller
+@Hidden
 public class AuthentificationController {
     @Autowired
     private final AuthenticationService service;
@@ -33,26 +41,40 @@ public class AuthentificationController {
      * @param httpRequest
      * @return envoie un mail à l'utilisateur pour que cet utilisateur puisse changer de mot de passe et se connecter
      */
+    @Operation(
+            description = "api endpoint for swagger",
+            summary = "this is a summary for swagger endpoint",
+            responses = {
+                    @ApiResponse (
+                            description = "success",
+                            responseCode = "200"
+                    ),
+                    @ApiResponse(
+                            description = "UnAuthorized / invalid token",
+                            responseCode = "403"
+                    )
+            }
+    )
     @PostMapping("/register")
     public ResponseEntity<User> register(
-            @RequestBody RegisterRequest request, final HttpServletRequest httpRequest
+            @Valid @RequestBody RegisterRequest request, final HttpServletRequest httpRequest
             ){
-        User response = service.register(request);
-        publisher.publishEvent(new RegistrationCompletePublisherEvent(response,applicationUrl(httpRequest)));
-        return ResponseEntity.ok(response);
+       // publisher.publishEvent(new RegistrationCompletePublisherEvent(response,applicationUrl(httpRequest)));
+        return ResponseEntity.ok(service.register(request));
     }
     @PostMapping("/changer")
-    public ResponseEntity<User> reset(@RequestBody ResetPasswordRequest request){
+    public ResponseEntity<User> reset(@Valid @RequestBody ResetPasswordRequest request){
         return ResponseEntity.ok(service.resetPassword(request));
     }
     @PostMapping("/forgot")
-    public ResponseEntity<String> forgot(@RequestBody String request) throws MessagingException {
+    public ResponseEntity<String> forgot(@Valid @RequestBody String request) throws MessagingException {
         return ResponseEntity.ok(service.forgotPassword(request));
     }
-
+    //hide a mapping in swagger
+    @Hidden
     @PostMapping("/authentication")
     public ResponseEntity<UserReturnRequest> authenticate(
-            @RequestBody AuthenticationRequest request
+            @Valid @RequestBody AuthenticationRequest request
     ){
         return ResponseEntity.ok(service.authenticate(request));
     }
@@ -75,7 +97,12 @@ public class AuthentificationController {
 
     @DeleteMapping("/activer/{code}")
     public ResponseEntity<User> activer(@PathVariable("code") String code){
-        return ResponseEntity.ok(service.activer(code));
+        return ResponseEntity.ok(service.activerUtilisateur(code));
+    }
+
+    @DeleteMapping("/deactiver/{code}")
+    public ResponseEntity<User> deactiver(@PathVariable("code") String code){
+        return ResponseEntity.ok(service.deactiverUtilisateur(code));
     }
 
     public String applicationUrl(HttpServletRequest httpRequest) {

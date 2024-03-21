@@ -1,9 +1,6 @@
 package com.example.Api_version.entities;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -11,20 +8,28 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.Date;
 
-@Entity
-@AllArgsConstructor
-@NoArgsConstructor
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
 public class LicenceServeur {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
     private String code;
     private String libelle;
-    private String key;
+    private String keyLicenceServeur;
     private int statut;
-    @OneToOne
+    @ManyToOne
     private Agence agence;
-    private LocalDateTime dateCreation;
+    @ManyToOne
+    @JoinColumn(name = "poste_id")
+    private Poste poste;
+    @Temporal(TemporalType.DATE)
+    private Date dateCreation;
     private LocalDateTime dateDesactivation;
-    @OneToOne
+    @ManyToOne
     private Module module;
+    @ManyToOne
+    private Parametre parametre;
 }

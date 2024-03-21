@@ -13,10 +13,12 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface AgenceRepository extends JpaRepository<Agence, String> {
-  Optional<Agence> findByCodeAgenceAndInstitution(String codeAgence, Institution institution);
-  Optional<Agence> findByNomAndInstitution(String nom, Institution institution);
-  Optional<Agence> findByCodeAgence(String codeAgence);
+public interface AgenceRepository extends JpaRepository<Agence, Integer> {
+  Optional<Agence> findByCodeAgenceIgnoreCaseAndInstitution(String codeAgence, Institution institution);
+  Optional<Agence> findByNomIgnoreCaseAndInstitution(String nom, Institution institution);
+  Optional<Agence> findByCodeAgenceIgnoreCase(String codeAgence);
+
+  Optional<Agence> findByIdAndInstitution(int id, Institution institution);
   @Query(value = "select DISTINCT p.codeproduit, p.nom from produit p JOIN contrat_institution c ON \n" +
           "c.produit_codeproduit = p.codeproduit JOIN institution i ON c.institution_codeinst = i.codeinst\n" +
           "where p.statut = 1 AND i.statut = 1 AND c.statut = 1 AND i.codeinst = :codeinst", nativeQuery = true)
@@ -32,6 +34,8 @@ public interface AgenceRepository extends JpaRepository<Agence, String> {
           "WHERE m.statut = 1 AND p.statut = 1 AND p.codeproduit = :codeProduit AND m.type_module = 'standard';", nativeQuery = true)
   List<Object[]> modules(@Param("codeProduit") String codeProduit);
   Optional<Agence> findByInstitutionAndCodeAgenceAndStatut(Institution institution, String codeAgence, int statut);
+
+  Optional<Agence> findByIdAndInstitutionAndStatut(int id,Institution institution, int statut);
   List<Agence> findAllByInstitutionAndStatut(Institution institution, int statut);
 
 

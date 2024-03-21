@@ -11,7 +11,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @EnableScheduling
 @SpringBootApplication
 public class ApiVersionApplication {
-
 	@Bean
 	public WebMvcConfigurer configHttp(){
 		return new WebMvcConfigurer() {
@@ -30,6 +29,11 @@ public class ApiVersionApplication {
 		SpringApplication.run(ApiVersionApplication.class, args);
 
 	}
+	
+
+
+
+
 /*
 	@EventListener(ApplicationReadyEvent.class)
 	public void sendMail(){

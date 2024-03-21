@@ -17,6 +17,8 @@ import java.util.Collection;
 @Entity
 public class Produit {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
     private String codeProduit;
     @NotBlank(message = "Obligatoire!!")
     private String nom;

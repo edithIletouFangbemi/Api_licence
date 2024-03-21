@@ -44,7 +44,7 @@ public class CheckExpiration {
           reponse = licenceService.checkLicence(request);
           var response = new CheckReturn();
 
-        Optional<Module> moduleOptional = moduleRepository.findByCodeModuleAndStatut(AESCryptor.decrypt(request.getModule(),returnKey), 1);
+        Optional<Module> moduleOptional = moduleRepository.findByCodeModuleIgnoreCaseAndStatut(AESCryptor.decrypt(request.getModule(),returnKey), 1);
 
         if(moduleOptional.isEmpty()) throw new ProduitException("aucun module avec ce code ");
 
@@ -64,7 +64,7 @@ public class CheckExpiration {
 
            var licence = new Licence();
 
-          Optional<Licence> licenceOptional = licenceRepository.findByPosteAndModule(poste, module);
+          Optional<Licence> licenceOptional = licenceRepository.findByPosteAndModuleAndStatut(poste, module,1);
 
           if(licenceOptional.isEmpty()) throw new ProduitException("aucune licence pour ce poste avec ce module !");
 

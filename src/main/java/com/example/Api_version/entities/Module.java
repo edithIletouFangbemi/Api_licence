@@ -13,6 +13,8 @@ import java.time.LocalDateTime;
 @Entity
 public class Module {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private int id;
     private String codeModule;
     private String libelleModule;
     @ManyToOne

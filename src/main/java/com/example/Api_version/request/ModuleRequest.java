@@ -4,8 +4,9 @@ import lombok.Data;
 
 @Data
 public class ModuleRequest {
+    private String codeModule;
     private String libelleModule;
     private String description;
     private String typeModule;
-    private String produitId;
+    private int produitId;
 }

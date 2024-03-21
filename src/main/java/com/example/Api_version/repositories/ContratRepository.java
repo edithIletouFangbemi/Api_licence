@@ -6,17 +6,19 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface ContratRepository extends JpaRepository<Contrat_Institution, String> {
+public interface ContratRepository extends JpaRepository<Contrat_Institution, Integer> {
     Optional<Contrat_Institution> findByInstitution(Institution institution);
 
-    Optional<Contrat_Institution> findByInstitutionAndProduit(Institution institution, Produit produit);
+    //Optional<Contrat_Institution> findByInstitutionAndProduit(Institution institution, Produit produit);
     List<Contrat_Institution> findAllByStatut(int statut);
+    Optional<Contrat_Institution> findByIdAndStatut(int id,int statut);
 
-    @Query(value="select i.codeinst, i.nominst, i.typearchitecture, COUNT(c.produit_codeProduit) from contrat_institution c JOIN \n" +
+    @Query(value=" select i.codeinst, i.nominst, i.typearchitecture, COUNT(c.produit_codeProduit) from contrat_institution c JOIN \n" +
             "institution i On c.institution_codeinst = i.codeinst\n" +
             " where i.statut =1 AND c.statut = 1\n" +
             " Group by i.codeinst", nativeQuery = true)
@@ -24,11 +26,19 @@ public interface ContratRepository extends JpaRepository<Contrat_Institution, St
 
     List<Contrat_Institution> findAllByInstitutionAndStatut(Institution institution, int statut);
 
-    Optional<Contrat_Institution> findByProduitAndCodeContratAndStatut(Produit produit, String codeContrat, int statut);
-    Optional<Contrat_Institution> findByInstitutionAndProduitAndStatut(Institution institution,
+    //Optional<Contrat_Institution> findByProduitAndCodeContratAndStatut(Produit produit, String codeContrat, int statut);
+   /* Optional<Contrat_Institution> findByInstitutionAndProduitAndStatut(Institution institution,
                                          Produit produit,
                                          int statut
-                                                                       );
+    );*/
+    @Query(" select ci from Contrat_Institution ci " +
+            " where ci.institution.id = :institutionId AND ci.typeContrat = :typeContrat AND " +
+            " ci.statut = :statut AND " +
+            " ci.dateCreation BETWEEN :dateDebut AND :dateFin ")
+    List<Contrat_Institution> situationContrat(
+           @Param("institutionId") int institutionId, @Param("typeContrat") String typeContrat, @Param("dateDebut") Date dateDebut,
+           @Param("dateFin") Date dateFin, @Param("statut") int statut
+    );
 
     @Query(value = "SELECT i.codeinst, i.nominst, i.adresseinst, i.statut" +
             " FROM INSTITUTION i " +
@@ -100,5 +110,9 @@ public interface ContratRepository extends JpaRepository<Contrat_Institution, St
             "Group by pst.codeposte, a.codeagence, p.codeproduit\n" +
             ";", nativeQuery = true)
     List<Object[]> posteActive(@Param("codeagence") String codeagence);
+
+    @Query(" select DISTINCT dt.agence from DetailContrat dt" +
+            " where dt.statut = 1 AND dt.sousContrat.id = :idSousContrat AND dt.sousContrat.produit.id = :idProduit ")
+    List<Agence> getAllAgenceByIdSousContratAndIdProduit(@Param("idSousContrat") int idSousContrat, @Param("idProduit") int idProduit);
 
 }

@@ -1,12 +1,15 @@
 package com.example.Api_version.Services;
 
 import com.example.Api_version.entities.Parametre;
+import com.example.Api_version.exceptions.AgenceException;
 import com.example.Api_version.exceptions.ProduitException;
 import com.example.Api_version.repositories.ParametreRepository;
 import com.example.Api_version.request.ParametreRequest;
 import com.example.Api_version.utils.CodeGenerator;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -26,6 +29,8 @@ public class ParametreService {
     }
 
     public Parametre creer(ParametreRequest request){
+        System.out.println(request);
+        if(request.getDateDebut().after(request.getDateFin())) throw new AgenceException("la date de debut doit être inférieure à la date fin", HttpStatus.BAD_REQUEST);
         String description = "";
         description = String.join(",", request.getParametres());
 
@@ -41,7 +46,7 @@ public class ParametreService {
             parametreRepository.save(parametre);
         }*/
 
-        Optional<Parametre> param = parametreRepository.findByStatut(1);
+       /* Optional<Parametre> param = parametreRepository.findByStatut(1);
         if(param.isPresent()){
             parametre = param.get();
             if(parametre.getDateFin() != null){
@@ -61,12 +66,16 @@ public class ParametreService {
             parametre.setDateFin(request.getDateDebut().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime().minusDays(1));
             parametre.setStatut(2);
             parametreRepository.save(parametre);
-        }
+        } */
+
+            Long nbrCount = parametreRepository.countNbrParametreOverlapping(request.getDateDebut(),request.getDateFin());
+
+            if(nbrCount > 0 ) throw new AgenceException("Les dates définies chevauchent les dates des parametres en cours !!", HttpStatus.BAD_REQUEST);
 
             parametre = new Parametre();
             parametre.setDateDebut(request.getDateDebut());
             if(request.getDateFin() != null){
-                parametre.setDateFin(request.getDateFin().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
+                parametre.setDateFin(request.getDateFin());
             }
             parametre.setDescription(description);
             parametre.setStatut(1);
@@ -74,13 +83,12 @@ public class ParametreService {
             parametre.setCodeParametre(CodeGenerator.codeParametre(parametre.getLibelle()));
             return parametreRepository.save(parametre);
 
-
     }
 
-    public Parametre getOne(String codeParametre){
-        Optional<Parametre> parametreOptional = parametreRepository.findByCodeParametreAndStatut(codeParametre,1);
+    public Parametre getOne(int id){
+        Optional<Parametre> parametreOptional = parametreRepository.findByIdAndStatut(id,1);
 
-        if(parametreOptional.isEmpty()) throw new ProduitException("Aucun parametre avec "+codeParametre);
+        if(parametreOptional.isEmpty()) throw new ProduitException("Aucun parametre avec l'identifiant "+id);
 
         return parametreOptional.get();
     }
@@ -89,13 +97,23 @@ public class ParametreService {
         return parametreRepository.findByStatut(1).get();
     }
 
+    public Parametre getParamCheckingWithDate(Date dateForCheck){
+        return parametreRepository.getParametreByDate(dateForCheck).get();
+    }
+
     public List<Parametre> lister(){
         return parametreRepository.findAllParametre();
     }
 
-    public Parametre editer(String code, ParametreRequest request){
-        Optional<Parametre> parametreOptional = parametreRepository.findByCodeParametreAndStatut(code,1);
-        if(parametreOptional.isEmpty()) throw new ProduitException("Aucun parametre avec le code "+code);
+    public Parametre editer(int id, ParametreRequest request){
+        Optional<Parametre> parametreOptional = parametreRepository.findByIdAndStatut(id,1);
+        if(parametreOptional.isEmpty()) throw new ProduitException("Aucun parametre avec l'identifiant "+id);
+        parametre = parametreOptional.get();
+
+        Long nbrCount = parametreRepository.countNbrParametreOverlappingAndCheckId(request.getDateDebut(),request.getDateFin(), parametre.getId());
+        System.out.println(parametre.getId());
+        System.out.println(nbrCount);
+        if(nbrCount > 0 ) throw new AgenceException("Les dates définies chevauchent les dates des parametres en cours !!", HttpStatus.BAD_REQUEST);
 
         parametre = parametreOptional.get();
         String description = String.join(",", request.getParametres());
@@ -105,12 +123,13 @@ public class ParametreService {
         return parametreRepository.save(parametre);
     }
 
-    public Parametre supprimer(String code){
-        Optional<Parametre> parametreOptional = parametreRepository.findByCodeParametreAndStatut(code,1);
-        if(parametreOptional.isEmpty()) throw new ProduitException("Aucun parametre avec le code "+code);
+    public Parametre supprimer(int id, Date dateFin){
+        System.out.println();
+        Optional<Parametre> parametreOptional = parametreRepository.findByIdAndStatut(id,1);
+        if(parametreOptional.isEmpty()) throw new ProduitException("Aucun parametre avec l'identifiant"+id);
         parametre = parametreOptional.get();
         parametre.setStatut(2);
-        parametre.setDateFin(LocalDateTime.now());
+        parametre.setDateFin(dateFin);
         return parametreRepository.save(parametre);
     }
 }

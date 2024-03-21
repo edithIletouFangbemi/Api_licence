@@ -37,7 +37,7 @@ public class IntermediaireService {
 
         modules.forEach(mod->{
             detail = new DetailContrat();
-            detail.setCodeDetailContrat(CodeGenerator.codeDetailContrat(agence.getNom()));
+        //    detail.setCodeDetailContrat(CodeGenerator.codeDetailContrat(agence.getNom()));
             detail.setAgence(agence);
             detail.setStatut(1);
             detail.setLibelle("Activation de module pour "+ agence.getNom());

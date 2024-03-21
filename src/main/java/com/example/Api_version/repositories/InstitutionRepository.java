@@ -12,7 +12,7 @@ import java.util.Optional;
 
 @Repository
 public interface InstitutionRepository extends JpaRepository<Institution, Integer> {
- Optional<Institution> findByNomInstIgnoreCase(String nomInst);
+ Optional<Institution> findByNomInstIgnoreCaseAndStatut(String nomInst, int statut);
  Optional<Institution> findByCodeInst(String code);
  Optional<Institution> findByCodeInstAndStatut(String code, int statut);
  Optional<Institution> findByIdAndStatut(int id, int statut);
@@ -32,8 +32,10 @@ public interface InstitutionRepository extends JpaRepository<Institution, Intege
          "where i.statut = 1 AND a.statut = 1\n" +
          "GROUP By i.codeinst;", nativeQuery = true)
  List<Object[]> countAgence();
+
  @Query(value = "select DISTINCT i.nominst, COALESCE(COUNT(p.codeproduit), 0) from institution i JOIN contrat_institution c\n" +
          "ON c.institution_codeinst = i.codeinst JOIN produit p ON c.produit_codeproduit = p.codeproduit\n" +
          "group by  i.codeinst", nativeQuery = true)
  List<Object[]> countWithProduit();
+
 }
